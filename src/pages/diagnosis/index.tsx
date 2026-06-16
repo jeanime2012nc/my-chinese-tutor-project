@@ -16,8 +16,27 @@ interface DiagnosisResult {
   summary: string
 }
 
+// 示例数据：高中语文常见薄弱点
+const SAMPLE_RESULT: DiagnosisResult = {
+  id: 'sample',
+  question_ids: ['1', '2', '3', '4', '5'],
+  error_type_stats: {
+    '古诗词默写错误': 3,
+    '文言文实词理解': 2,
+    '诗歌鉴赏手法分析': 2,
+    '现代文阅读主旨把握': 1,
+    '作文审题偏题': 1,
+  },
+  top_weaknesses: [
+    { name: '古诗词名句默写与理解', count: 3, level: 'severe' },
+    { name: '文言文实词与虚词辨析', count: 2, level: 'moderate' },
+    { name: '诗歌鉴赏表现手法', count: 2, level: 'moderate' },
+  ],
+  summary: '你的主要薄弱点在**古诗词默写**和**文言文实词**。建议每日坚持10分钟古诗词背诵，重点掌握必修课本中要求背诵的篇目。文言文方面，建议整理常见实词（如"之""其""而""以"）的多义用法，通过逐篇翻译积累语感。诗歌鉴赏可尝试"手法-内容-情感"三步分析法。',
+}
+
 export default function Diagnosis() {
-  const [result, setResult] = useState<DiagnosisResult | null>(null)
+  const [result, setResult] = useState<DiagnosisResult | null>(SAMPLE_RESULT)
   const [loading, setLoading] = useState(false)
 
   const handleDiagnose = async () => {
@@ -60,24 +79,12 @@ export default function Diagnosis() {
       </View>
 
       <ScrollView className="flex-1 px-4 pt-3 pb-6">
-        {!result && !loading && (
-          <View className="mt-8">
-            <Card>
-              <CardContent className="p-6">
-                <View className="flex items-center justify-center mb-4">
-                  <Target size={48} color="#93c5fd" />
-                </View>
-                <Text className="block text-center text-base font-semibold text-gray-800 mb-2">
-                  智能诊断你的语文薄弱点
-                </Text>
-                <Text className="block text-center text-sm text-gray-500 mb-6">
-                  提交几道错题后，点击下方按钮即可生成你的专属诊断报告
-                </Text>
-                <Button className="w-full" onClick={handleDiagnose}>
-                  <Text className="block text-white font-medium">开始诊断</Text>
-                </Button>
-              </CardContent>
-            </Card>
+        {/* 示例数据提示 */}
+        {result?.id === 'sample' && (
+          <View className="mb-3 bg-blue-50 rounded-xl px-4 py-2">
+            <Text className="block text-xs text-blue-600">
+              以下为高中语文常见薄弱点示例，提交更多错题可生成你的专属诊断
+            </Text>
           </View>
         )}
 

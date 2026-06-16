@@ -7,10 +7,68 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Dumbbell, Lightbulb, CircleAlert, Flame } from 'lucide-react-taro'
+import { Dumbbell, Lightbulb, Flame } from 'lucide-react-taro'
+
+// 示例数据：高中语文专项训练
+const SAMPLE_TRAINING: any = {
+  training_data: [
+    {
+      difficulty: 'easy',
+      type: '基础巩固',
+      question: '补写出下列名篇名句中的空缺部分：\n（1）《登高》中"无边落木萧萧下，______"。\n（2）《赤壁赋》中"寄蜉蝣于天地，______"。',
+      answer: '（1）不尽长江滚滚来\n（2）渺沧海之一粟',
+      analysis: '（1）杜甫《登高》颈联，注意"滚滚"一词。（2）苏轼《赤壁赋》，"沧"易误写为"苍"，"粟"易误写为"栗"。',
+      tip: '⚠️ 常考易错字："萧萧"非"潇潇"；"沧"非"苍"；"粟"非"栗"。建议用"三遍法"记忆。',
+      knowledge_point: '古诗词默写',
+    },
+    {
+      difficulty: 'easy',
+      type: '基础巩固',
+      question: '下列加点词的释义，不正确的一项是（  ）\nA. 使人遗赵王书（送给）\nB. 不如因而厚遇之（招待、款待）\nC. 且以一璧之故逆强秦之欢（违背）\nD. 臣诚恐见欺于王而负赵（承担）',
+      answer: 'D（负：辜负。"负赵"意为辜负了赵王。）',
+      analysis: '"负"多义辨析：①凭借（"负其强"）②辜负（"负赵"）③背弃（"负约"）。结合语境判断。',
+      tip: '⚠️ 文言实词要结合语境。"负"有"背着""辜负""凭借""背弃"等义项，是高考高频词。',
+      knowledge_point: '文言文实词理解',
+    },
+    {
+      difficulty: 'medium',
+      type: '中档变式',
+      question: '杜牧《山行》"远上寒山石径斜，白云生处有人家"，请赏析"生"字的妙处。',
+      answer: '"生"字写出白云升腾缭绕的动态美，赋予静态画面以生命力，营造缥缈悠远的意境，体现诗人对自然山水的热爱。',
+      analysis: '炼字题思路：①解释字义 ②描绘画面 ③分析效果 ④点明情感。注意"生"与"深"的区别。',
+      tip: '⚠️ 炼字题答题结构：字义 + 画面 + 效果 + 情感。不要只答"生动形象"，要具体分析。',
+      knowledge_point: '诗歌鉴赏炼字',
+    },
+    {
+      difficulty: 'medium',
+      type: '中档变式',
+      question: '韩愈《师说》中"古之圣人，其出人也远矣，犹且从师而问焉；今之众人，其下圣人也亦远矣，而耻学于师"，运用了什么论证方法？',
+      answer: '对比论证。将古之圣人"从师而问"与今之众人"耻学于师"对比，突出从师的重要性，增强说服力。',
+      analysis: '对比论证分析三要素：①对比对象（圣人与众人）②对比内容（行为差异）③对比目的（突出观点）。',
+      tip: '⚠️ 论证方法题：判断方法 + 具体分析 + 表达效果，三步缺一不可。',
+      knowledge_point: '文言文论证方法',
+    },
+    {
+      difficulty: 'advanced',
+      type: '拔高综合',
+      question: '李清照《鹧鸪天·桂花》"何须浅碧深红色，自是花中第一流"表达了怎样的审美观？末句"骚人可煞无情思，何事当年不见收"用了什么手法？',
+      answer: '（1）重内在品格、轻外在艳丽的审美观。（2）用典（屈原未收桂花）与拟人，借古讽今，表达不被人理解的孤傲与自信。',
+      analysis: '咏物诗三步：从"物"到"人"再到"情"。桂花自喻，表达超越世俗的审美追求。',
+      tip: '⚠️ 咏物诗注意"物→人→情"分析路径。"何须""自是"等虚词体现自信语气，是答题关键。',
+      knowledge_point: '诗歌鉴赏综合',
+    },
+  ],
+  careful_training: [
+    '⚠️ 古诗词默写注意字形细节。"长" vs "常"、"萧" vs "潇"、"栗" vs "粟"等易混淆，写完后逐字检查。',
+    '⚠️ 诗歌鉴赏先点明手法/字义，再分析画面和效果，最后落到情感，不可跳过画面描述。',
+    '⚠️ 文言文翻译注意古今异义和词类活用，不要望文生义。',
+  ],
+  difficulty_distribution: { basic: 2, medium: 2, advanced: 1 },
+  summary: '本次训练覆盖古诗词默写、文言文实词、诗歌鉴赏三大板块。建议先基础巩固，再中档变式，最后挑战拔高题。审题时圈画关键词，答题时结构化表达。',
+}
 
 export default function Training() {
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<any>(SAMPLE_TRAINING)
   const [loading, setLoading] = useState(false)
 
   const handleGenerate = async () => {
@@ -145,7 +203,7 @@ export default function Training() {
                   {result.careful_training.map((tip: string, idx: number) => (
                     <View key={idx} className="bg-red-50 rounded-lg p-2 mb-2">
                       <View className="flex flex-row items-start gap-2">
-                        <CircleAlert size={14} color="#ef4444" className="mt-1 flex-shrink-0" />
+                        <Flame size={14} color="#ef4444" className="mt-1 flex-shrink-0" />
                         <Text className="block text-sm text-gray-700 leading-relaxed">{tip}</Text>
                       </View>
                     </View>

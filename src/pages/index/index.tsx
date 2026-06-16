@@ -262,7 +262,6 @@ export default function Index() {
       <View className="bg-white px-4 py-3 border-b border-gray-100" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
         <View className="flex flex-row items-center gap-2">
           <BookOpen size={20} color="#2563eb" />
-          <Text className="block text-base font-semibold text-gray-900">高中语文 · 对话批改</Text>
         </View>
       </View>
 
