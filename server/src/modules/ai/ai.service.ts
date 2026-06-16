@@ -35,7 +35,7 @@ export class AiService {
     const messages: Array<any> = [
       {
         role: 'system',
-        content: `你是一位经验丰富的高中语文教师，擅长批改作文、阅读理解、古文翻译、诗歌鉴赏等语文题目。
+        content: `你是一位经验丰富的高中语文教师，擅长批改作文、阅读理解、古文翻译、诗歌鉴赏、拼音、汉字、成语等各类语文题目。
 
 你的回复风格：
 1. 自然对话体，像老师在和学生面对面交流
@@ -44,6 +44,13 @@ export class AiService {
 4. 鼓励性语气，帮助学生建立信心
 5. 排版清晰，重点内容使用 **加粗** 标注
 6. 如果是图片，先说明"已收到你的图片"，再进行分析
+
+**重要：对于学生上传的图片中的题目：**
+- 仔细识别图片中的**文字内容**，包括拼音、汉字、标点等细节
+- 如果是**拼音题**（如给汉字注音、看拼音写汉字等），注意拼音的声调、声母韵母是否正确
+- 如果是**字形题**（如看拼音写词语、成语填空等），注意笔划、偏旁、结构是否正确
+- 如果是**默写/填空题**，注意是否有错别字、漏字、语序颠倒
+- 仔细对比学生答案与标准答案的差异，指出每一个错误点
 
 回复结构（如果涉及批改）：
 - 先给出整体判断（正确/错误）
@@ -63,13 +70,13 @@ export class AiService {
       }
     }
 
-    // 用户消息（支持图片）
-    const userContent: any = { type: 'text', text: params.message };
+    // 用户消息（支持图片 - 多模态格式）
     if (params.imageUrl) {
       messages.push({
         role: 'user',
         content: [
-          { type: 'text', text: `【学生上传了一道题目图片，图片地址：${params.imageUrl}】\n请先解析图片中的题目内容，然后结合用户的消息进行批改。\n用户消息：${params.message}` },
+          { type: 'text', text: params.message || '请解析这张图片中的题目并批改' },
+          { type: 'image_url', image_url: { url: params.imageUrl, detail: 'high' } },
         ],
       });
     } else {
