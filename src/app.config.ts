@@ -6,7 +6,7 @@ export default typeof defineAppConfig === 'function'
         'pages/training/index',
       ],
       window: {
-        navigationBarTitleText: '全科错题辅导',
+        navigationBarTitleText: '语文智能批改',
         navigationBarBackgroundColor: '#2563eb',
         navigationBarTextStyle: 'white',
       },
@@ -18,7 +18,7 @@ export default typeof defineAppConfig === 'function'
         list: [
           {
             pagePath: 'pages/index/index',
-            text: '错题批改',
+            text: '智能批改',
             iconPath: './assets/tabbar/book-open.png',
             selectedIconPath: './assets/tabbar/book-open-active.png',
           },
@@ -44,7 +44,7 @@ export default typeof defineAppConfig === 'function'
         'pages/training/index',
       ],
       window: {
-        navigationBarTitleText: '全科错题辅导',
+        navigationBarTitleText: '语文智能批改',
         navigationBarBackgroundColor: '#2563eb',
         navigationBarTextStyle: 'white',
       },
@@ -56,7 +56,7 @@ export default typeof defineAppConfig === 'function'
         list: [
           {
             pagePath: 'pages/index/index',
-            text: '错题批改',
+            text: '智能批改',
             iconPath: './assets/tabbar/book-open.png',
             selectedIconPath: './assets/tabbar/book-open-active.png',
           },
