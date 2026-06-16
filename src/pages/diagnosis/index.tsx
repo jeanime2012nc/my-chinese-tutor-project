@@ -16,23 +16,23 @@ interface DiagnosisResult {
   summary: string
 }
 
-// 示例数据：高中语文常见薄弱点
+// 示例数据：统编版必修下第八单元常见薄弱点
 const SAMPLE_RESULT: DiagnosisResult = {
   id: 'sample',
   question_ids: ['1', '2', '3', '4', '5'],
   error_type_stats: {
-    '古诗词默写错误': 3,
-    '文言文实词理解': 2,
-    '诗歌鉴赏手法分析': 2,
-    '现代文阅读主旨把握': 1,
-    '作文审题偏题': 1,
+    '字音字形混淆': 3,
+    '文言实词多义辨析错误': 2,
+    '翻译题采分点遗漏': 2,
+    '文本主旨概括不全': 1,
+    '对比分析思路不清': 1,
   },
   top_weaknesses: [
-    { name: '古诗词名句默写与理解', count: 3, level: 'severe' },
-    { name: '文言文实词与虚词辨析', count: 2, level: 'moderate' },
-    { name: '诗歌鉴赏表现手法', count: 2, level: 'moderate' },
+    { name: '《谏太宗十思疏》字音字形与易错字', count: 3, level: 'severe' },
+    { name: '文言实词多义辨析（克/休/负/诚）', count: 2, level: 'moderate' },
+    { name: '翻译判断句与使动用法采分点', count: 2, level: 'moderate' },
   ],
-  summary: '你的主要薄弱点在**古诗词默写**和**文言文实词**。建议每日坚持10分钟古诗词背诵，重点掌握必修课本中要求背诵的篇目。文言文方面，建议整理常见实词（如"之""其""而""以"）的多义用法，通过逐篇翻译积累语感。诗歌鉴赏可尝试"手法-内容-情感"三步分析法。',
+  summary: '**第八单元**重点在于《谏太宗十思疏》和《答司马谏议书》的文言基础与思辨逻辑。\n\n① **字音字形**：注意"壅(yōng)蔽""黜(chù)恶""浚(jùn)泉源""载(zài)舟覆舟"等高频易错字，建议逐字抄写三遍。\n② **实词辨析**："克"有"能够/克制"二义；"休"有"福禄/停止"之别；"负"有"辜负/凭借/背弃"多义，需结合语境判断。\n③ **翻译题**：注意判断句式（"……者……也"）、使动用法（"固其根本""安其位"等），逐一标注采分点。\n④ **思辨对比**：《谏太宗十思疏》与《答司马谏议书》均为古代论说文，前者劝谏君主居安思危，后者回应政敌坚守变法初心，建议梳理两篇文章的论证思路。',
 }
 
 export default function Diagnosis() {
@@ -83,7 +83,7 @@ export default function Diagnosis() {
         {result?.id === 'sample' && (
           <View className="mb-3 bg-blue-50 rounded-xl px-4 py-2">
             <Text className="block text-xs text-blue-600">
-              以下为高中语文常见薄弱点示例，提交更多错题可生成你的专属诊断
+              以下为统编版必修下第八单元常见薄弱点示例，提交更多错题可生成你的专属诊断
             </Text>
           </View>
         )}
