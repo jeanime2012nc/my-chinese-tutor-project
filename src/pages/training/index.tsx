@@ -3,279 +3,174 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { Network } from '@/network'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Dumbbell, Lightbulb, CircleAlert, Target, BookOpen } from 'lucide-react-taro'
-
-const SUBJECTS = ['数学', '语文', '英语', '物理', '化学', '生物', '历史', '地理', '政治']
+import { Dumbbell, Lightbulb, CircleAlert, Flame } from 'lucide-react-taro'
 
 export default function Training() {
-  const [studentName, setStudentName] = useState('')
-  const [subject, setSubject] = useState('')
+  const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
-  const [training, setTraining] = useState<any>(null)
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
-  const [expandedCareful, setExpandedCareful] = useState<number | null>(null)
 
   const handleGenerate = async () => {
-    if (!studentName || !subject) {
-      Taro.showToast({ title: '请填写学生姓名并选择科目', icon: 'none' })
-      return
-    }
-
     setLoading(true)
-    setTraining(null)
-    setExpandedIndex(null)
-    setExpandedCareful(null)
-
     try {
-      // 先获取诊断结果，取最新一条
-      const diagRes = await Network.request({
-        url: `/api/diagnosis/list/${studentName}`,
-        method: 'GET',
-      })
-      console.log('诊断列表:', diagRes.data)
-
-      const diagnoses = diagRes.data.data || []
-      const latestDiagnosis = diagnoses.length > 0 ? diagnoses[0] : null
-      const diagnosisId = latestDiagnosis?.id || 0
-
       const res = await Network.request({
         url: '/api/training/generate',
         method: 'POST',
-        data: { studentName, subject, diagnosisId },
+        data: {},
       })
       console.log('训练结果:', res.data)
-      setTraining(res.data.data)
-    } catch (error) {
-      console.error('生成训练失败:', error)
-      Taro.showToast({ title: '生成训练失败，请先完成诊断', icon: 'none' })
+      setResult(res.data.data)
+    } catch (err) {
+      console.error('生成失败:', err)
+      Taro.showToast({ title: '生成失败，请先提交错题', icon: 'none' })
     } finally {
       setLoading(false)
     }
   }
 
-  const getTypeLabel = (type: string) => {
-    const map: Record<string, { label: string; color: string }> = {
-      basic: { label: '基础巩固', color: 'bg-green-100 text-green-700 border-green-200' },
-      medium: { label: '中档变式', color: 'bg-amber-100 text-amber-700 border-amber-200' },
-      advanced: { label: '拔高综合', color: 'bg-red-100 text-red-700 border-red-200' },
-    }
-    return map[type] || { label: type, color: '' }
+  const difficultyBadge = (d: string) => {
+    if (d === 'easy') return <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200"><Text className="block text-xs">基础</Text></Badge>
+    if (d === 'medium') return <Badge variant="secondary" className="bg-amber-100 text-amber-700 border-amber-200"><Text className="block text-xs">中档</Text></Badge>
+    return <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200"><Text className="block text-xs">较难</Text></Badge>
   }
 
   return (
-    <ScrollView className="h-full bg-slate-50" scrollY>
-      <View className="p-4 space-y-4">
-        {/* 输入区 */}
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <View className="flex flex-row items-center gap-2">
-              <Dumbbell size={20} color="#2563eb" />
-              <Text className="block text-base font-semibold text-gray-900">个性化分层训练</Text>
-            </View>
-            <Separator />
-            <View>
-              <Text className="block text-sm font-medium text-gray-700 mb-1">学生姓名</Text>
-              <Input
-                placeholder="请输入学生姓名"
-                value={studentName}
-                onInput={(e) => setStudentName(e.detail.value)}
-              />
-            </View>
-            <View>
-              <Text className="block text-sm font-medium text-gray-700 mb-1">选择科目</Text>
-              <Select value={subject} onValueChange={setSubject}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="请选择科目" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SUBJECTS.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </View>
-            <Button disabled={loading} onClick={handleGenerate}>
-              <Target size={16} color="inherit" />
-              <Text className="block text-sm">{loading ? '生成训练中...' : '生成训练题'}</Text>
-            </Button>
-          </CardContent>
-        </Card>
+    <View className="h-full bg-slate-50 flex flex-col">
+      <View className="bg-white px-4 py-3 border-b border-gray-100" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+        <View className="flex flex-row items-center gap-2">
+          <Dumbbell size={20} color="#2563eb" />
+          <Text className="block text-base font-semibold text-gray-900">专项训练</Text>
+        </View>
+      </View>
 
-        {/* 加载态 */}
-        {loading && (
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
-            </CardContent>
-          </Card>
+      <ScrollView className="flex-1 px-4 pt-3 pb-6">
+        {!result && !loading && (
+          <View className="mt-8">
+            <Card>
+              <CardContent className="p-6">
+                <View className="flex items-center justify-center mb-4">
+                  <Dumbbell size={48} color="#93c5fd" />
+                </View>
+                <Text className="block text-center text-base font-semibold text-gray-800 mb-2">
+                  针对性薄弱训练
+                </Text>
+                <Text className="block text-center text-sm text-gray-500 mb-6">
+                  根据你的错题分析，AI 自动生成分层训练题，帮你巩固薄弱知识点
+                </Text>
+                <Button className="w-full" onClick={handleGenerate}>
+                  <Text className="block text-white font-medium">生成训练题</Text>
+                </Button>
+              </CardContent>
+            </Card>
+          </View>
         )}
 
-        {/* 训练结果 */}
-        {training && !loading && (
+        {loading && (
+          <View className="mt-4 space-y-3">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </View>
+        )}
+
+        {result && (
           <View className="space-y-4">
             {/* 难度分布 */}
-            {training.difficulty_distribution && (
-              <Card>
+            <Card>
+              <CardContent className="p-4">
+                <Text className="block text-sm font-bold text-gray-900 mb-3">📈 训练分布</Text>
+                <View className="flex flex-row gap-3">
+                  <View className="flex-1 bg-green-50 rounded-xl p-3 items-center">
+                    <Text className="block text-lg font-bold text-green-600">{result.difficulty_distribution?.basic || 0}</Text>
+                    <Text className="block text-xs text-green-700 mt-1">基础巩固</Text>
+                  </View>
+                  <View className="flex-1 bg-amber-50 rounded-xl p-3 items-center">
+                    <Text className="block text-lg font-bold text-amber-600">{result.difficulty_distribution?.medium || 0}</Text>
+                    <Text className="block text-xs text-amber-700 mt-1">中档变式</Text>
+                  </View>
+                  <View className="flex-1 bg-red-50 rounded-xl p-3 items-center">
+                    <Text className="block text-lg font-bold text-red-600">{result.difficulty_distribution?.advanced || 0}</Text>
+                    <Text className="block text-xs text-red-700 mt-1">拔高综合</Text>
+                  </View>
+                </View>
+              </CardContent>
+            </Card>
+
+            {/* 训练题列表 */}
+            {result.training_data?.map((item: any, idx: number) => (
+              <Card key={idx}>
+                <CardContent className="p-4">
+                  <View className="flex flex-row items-center gap-2 mb-2">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                      <Text className="block text-xs">第 {idx + 1} 题</Text>
+                    </Badge>
+                    {difficultyBadge(item.difficulty)}
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
+                      <Text className="block text-xs">{item.type}</Text>
+                    </Badge>
+                  </View>
+
+                  <Text className="block text-sm font-semibold text-gray-800 mb-2 leading-relaxed">{item.question}</Text>
+                  <Separator className="my-2" />
+
+                  <View className="bg-blue-50 rounded-lg p-2 mb-2">
+                    <Text className="block text-xs font-semibold text-blue-700 mb-1">💡 参考答案</Text>
+                    <Text className="block text-sm text-gray-800">{item.answer}</Text>
+                  </View>
+
+                  <View className="bg-amber-50 rounded-lg p-2 mb-2">
+                    <Text className="block text-xs font-semibold text-amber-700 mb-1">📖 解析</Text>
+                    <Text className="block text-sm text-gray-700 leading-relaxed">{item.analysis}</Text>
+                  </View>
+
+                  <View className="bg-green-50 rounded-lg p-2">
+                    <Text className="block text-xs font-semibold text-green-700 mb-1">⚠️ 避坑提醒</Text>
+                    <Text className="block text-xs text-gray-600">{item.tip}</Text>
+                  </View>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* 细心专项训练 */}
+            {result.careful_training && result.careful_training.length > 0 && (
+              <Card className="border-red-200">
                 <CardContent className="p-4">
                   <View className="flex flex-row items-center gap-2 mb-3">
-                    <Target size={18} color="#2563eb" />
-                    <Text className="block text-base font-semibold text-gray-900">训练题分布</Text>
+                    <Flame size={18} color="#ef4444" />
+                    <Text className="block text-base font-bold text-red-600">审题/计算细心专项</Text>
                   </View>
-                  <View className="flex flex-row gap-3">
-                    {[
-                      { key: 'basic', label: '基础巩固', color: 'bg-green-500' },
-                      { key: 'medium', label: '中档变式', color: 'bg-amber-500' },
-                      { key: 'advanced', label: '拔高综合', color: 'bg-red-500' },
-                    ].map((item) => (
-                      <View key={item.key} className="flex-1 items-center">
-                        <View className={`w-full h-2 rounded-full ${item.color} opacity-80 mb-1`} />
-                        <Text className="block text-xs text-gray-500 text-center">
-                          {item.label}: {training.difficulty_distribution[item.key] || 0}题
-                        </Text>
+                  {result.careful_training.map((tip: string, idx: number) => (
+                    <View key={idx} className="bg-red-50 rounded-lg p-2 mb-2">
+                      <View className="flex flex-row items-start gap-2">
+                        <CircleAlert size={14} color="#ef4444" className="mt-1 flex-shrink-0" />
+                        <Text className="block text-sm text-gray-700 leading-relaxed">{tip}</Text>
                       </View>
-                    ))}
-                  </View>
+                    </View>
+                  ))}
                 </CardContent>
               </Card>
             )}
 
-            {/* 训练题列表 */}
-            {training.training_data && training.training_data.length > 0 && (
-              <View className="space-y-3">
-                <View className="flex flex-row items-center gap-2 px-1">
-                  <BookOpen size={18} color="#2563eb" />
-                  <Text className="block text-base font-semibold text-gray-900">专项练习题</Text>
+            {/* 总结 */}
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50">
+              <CardContent className="p-4">
+                <View className="flex flex-row items-center gap-2 mb-2">
+                  <Lightbulb size={18} color="#7c3aed" />
+                  <Text className="block text-base font-bold text-gray-900">训练总结</Text>
                 </View>
-                {training.training_data.map((item: any, idx: number) => {
-                  const typeInfo = getTypeLabel(item.type)
-                  return (
-                    <Card key={idx}>
-                      <CardContent className="p-4">
-                        <View className="flex flex-row items-center gap-2 mb-2">
-                          <Badge variant="outline" className={typeInfo.color}>
-                            <Text className="block text-xs">{typeInfo.label}</Text>
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            <Text className="block text-xs">第 {idx + 1} 题</Text>
-                          </Badge>
-                        </View>
-                        <Text className="block text-sm text-gray-900 font-medium mb-2 leading-relaxed">
-                          {item.question}
-                        </Text>
-                        <Button
-                          variant="ghost"
-                          className="w-full"
-                          onClick={() => setExpandedIndex(expandedIndex === idx ? null : idx)}
-                        >
-                          <Lightbulb size={14} color="inherit" />
-                          <Text className="block text-xs">
-                            {expandedIndex === idx ? '收起解析' : '查看解析与答案'}
-                          </Text>
-                        </Button>
-                        {expandedIndex === idx && (
-                          <View className="mt-3 p-3 bg-blue-50 rounded-lg space-y-2">
-                            <Text className="block text-sm font-semibold text-gray-900">答案：</Text>
-                            <Text className="block text-sm text-gray-700 mb-2">{item.answer}</Text>
-                            <Separator />
-                            <Text className="block text-sm font-semibold text-gray-900">解析：</Text>
-                            <Text className="block text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                              {item.analysis}
-                            </Text>
-                            {item.tip && (
-                              <>
-                                <Separator />
-                                <View className="flex flex-row items-start gap-1">
-                                  <CircleAlert size={14} color="#f59e0b" className="mt-1" />
-                                  <Text className="block text-xs text-amber-600 flex-1">
-                                    💡 避坑提醒：{item.tip}
-                                  </Text>
-                                </View>
-                              </>
-                            )}
-                          </View>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </View>
-            )}
+                <Text className="block text-sm text-gray-700 leading-relaxed">{result.summary}</Text>
+              </CardContent>
+            </Card>
 
-            {/* 细心专项训练 */}
-            {training.careful_training && training.careful_training.length > 0 && (
-              <View className="space-y-3">
-                <Card className="border-amber-200 bg-amber-50">
-                  <CardContent className="p-4">
-                    <View className="flex flex-row items-center gap-2 mb-1">
-                      <CircleAlert size={18} color="#f59e0b" />
-                      <Text className="block text-base font-semibold text-amber-700">细心专项训练</Text>
-                    </View>
-                    <Text className="block text-xs text-amber-600 mb-3">
-                      检测到审题/计算失误较多，额外增加以下训练题
-                    </Text>
-                    <Separator className="mb-3" />
-                    <View className="space-y-3">
-                      {training.careful_training.map((item: any, idx: number) => (
-                        <View key={idx} className="p-3 bg-white rounded-lg border border-amber-100">
-                          <Text className="block text-sm font-medium text-gray-900 mb-2 leading-relaxed">
-                            {item.question}
-                          </Text>
-                          <Button
-                            variant="ghost"
-                            className="w-full"
-                            onClick={() => setExpandedCareful(expandedCareful === idx ? null : idx)}
-                          >
-                            <Lightbulb size={14} color="inherit" />
-                            <Text className="block text-xs">
-                              {expandedCareful === idx ? '收起解析' : '查看解析'}
-                            </Text>
-                          </Button>
-                          {expandedCareful === idx && (
-                            <View className="mt-2 p-3 bg-blue-50 rounded-lg space-y-1">
-                              <Text className="block text-sm font-semibold text-gray-900">答案：</Text>
-                              <Text className="block text-sm text-gray-700 mb-1">{item.answer}</Text>
-                              <Separator />
-                              <Text className="block text-sm font-semibold text-gray-900">解析：</Text>
-                              <Text className="block text-sm text-gray-700 whitespace-pre-wrap">{item.analysis}</Text>
-                              {item.tip && (
-                                <Text className="block text-xs text-amber-600 mt-1">
-                                  💡 {item.tip}
-                                </Text>
-                              )}
-                            </View>
-                          )}
-                        </View>
-                      ))}
-                    </View>
-                  </CardContent>
-                </Card>
-              </View>
-            )}
-
-            {/* 提示 */}
-            {(!training.training_data || training.training_data.length === 0) && (
-              <Alert>
-                <CircleAlert size={16} color="inherit" />
-                <AlertDescription>
-                  <Text className="block text-sm text-gray-700">
-                    暂无训练题目，请先完成错题录入与薄弱诊断。
-                  </Text>
-                </AlertDescription>
-              </Alert>
-            )}
+            <Button variant="secondary" onClick={handleGenerate} className="w-full">
+              <Text className="block text-sm">重新生成一组训练</Text>
+            </Button>
           </View>
         )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   )
 }

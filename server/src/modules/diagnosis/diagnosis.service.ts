@@ -11,8 +11,6 @@ export class DiagnosisService {
   ) {}
 
   async saveDiagnosis(data: {
-    studentName: string;
-    subject: string;
     errorTypeStats: Record<string, number>;
     topWeaknesses: Array<{ name: string; level: string; count: number }>;
     summary: string;
@@ -21,8 +19,8 @@ export class DiagnosisService {
     const { data: result, error } = await this.supabase
       .from('diagnosis_records')
       .insert({
-        student_name: data.studentName,
-        subject: data.subject,
+        student_name: '用户',
+        subject: '语文',
         error_type_stats: data.errorTypeStats,
         top_weaknesses: data.topWeaknesses,
         summary: data.summary,
@@ -38,11 +36,10 @@ export class DiagnosisService {
     return result;
   }
 
-  async getDiagnosesByStudent(studentName: string) {
+  async getAllDiagnoses() {
     const { data, error } = await this.supabase
       .from('diagnosis_records')
       .select('*')
-      .eq('student_name', studentName)
       .order('created_at', { ascending: false });
 
     if (error) {

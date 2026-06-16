@@ -11,44 +11,62 @@ export class ErrorQuestionsController {
     private readonly aiService: AiService,
   ) {}
 
-  @Post('grade')
+  /**
+   * 对话式批改：支持文字+图片提交
+   */
+  @Post('chat')
   @HttpCode(200)
-  async gradeAndSave(@Body() body: {
-    studentName: string;
-    subject: string;
-    questionText: string;
-    studentAnswer: string;
+  async chatGrade(@Body() body: {
+    message: string;
+    imageUrl?: string;
+    history?: Array<{ role: string; content: string }>;
   }) {
-    this.logger.log(`批改错题: ${body.subject}, ${body.questionText.substring(0, 30)}...`);
+    this.logger.log(`对话批改: ${body.message.substring(0, 40)}...`);
 
-    const gradeResult = await this.aiService.gradeQuestion({
-      subject: body.subject,
-      questionText: body.questionText,
-      studentAnswer: body.studentAnswer,
+    const result = await this.aiService.chatGrade({
+      message: body.message,
+      imageUrl: body.imageUrl,
+      history: body.history,
     });
 
-    const saved = await this.errorQuestionsService.createQuestion({
-      student_name: body.studentName,
-      subject: body.subject,
-      question_text: body.questionText,
-      student_answer: body.studentAnswer,
-      correct_answer: gradeResult.correctAnswer,
-      step_by_step: gradeResult.stepByStep,
-      is_correct: gradeResult.isCorrect,
-      error_type: gradeResult.errorType,
-      error_detail: gradeResult.errorDetail,
-      trap_analysis: gradeResult.trapAnalysis,
-      knowledge_points: gradeResult.knowledgePoints,
-      weakness_level: gradeResult.weaknessLevel,
-    });
+    // 如果 AI 识别出是批改场景且有结构化数据，保存错题记录
+    let savedQuestion = null;
+    if (result.grading) {
+      try {
+        savedQuestion = await this.errorQuestionsService.createQuestion({
+          student_name: '用户',
+          subject: '语文',
+          question_text: body.message,
+          student_answer: '（对话式提交，详见上下文）',
+          correct_answer: result.grading.correctAnswer,
+          step_by_step: result.grading.stepByStep,
+          is_correct: result.grading.isCorrect,
+          error_type: result.grading.errorType,
+          error_detail: result.grading.errorDetail,
+          trap_analysis: result.grading.trapAnalysis,
+          knowledge_points: result.grading.knowledgePoints,
+          weakness_level: result.grading.weaknessLevel,
+        });
+      } catch (err: any) {
+        this.logger.warn(`保存错题记录失败（不影响对话）: ${err.message}`);
+      }
+    }
 
-    return { code: 200, msg: 'success', data: saved };
+    return {
+      code: 200,
+      msg: 'success',
+      data: {
+        reply: result.reply,
+        grading: result.grading,
+        savedQuestion,
+      },
+    };
   }
 
-  @Get('list/:studentName')
+  @Get('list')
   @HttpCode(200)
-  async listQuestions(@Param('studentName') studentName: string) {
-    const questions = await this.errorQuestionsService.getQuestionsByStudent(studentName);
+  async listQuestions() {
+    const questions = await this.errorQuestionsService.getAllQuestions();
     return { code: 200, msg: 'success', data: questions };
   }
 

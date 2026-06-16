@@ -37,11 +37,10 @@ export class ErrorQuestionsService {
     return result;
   }
 
-  async getQuestionsByStudent(studentName: string) {
+  async getAllQuestions() {
     const { data, error } = await this.supabase
       .from('error_questions')
       .select('*')
-      .eq('student_name', studentName)
       .order('created_at', { ascending: false });
 
     if (error) {

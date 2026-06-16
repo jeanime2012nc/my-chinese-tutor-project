@@ -14,10 +14,10 @@ export const errorQuestions = pgTable(
   "error_questions",
   {
     id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
-    student_name: varchar("student_name", { length: 100 }).notNull(),  // 学生姓名
-    subject: varchar("subject", { length: 50 }).notNull(),          // 科目：数学/物理/化学等
-    question_text: text("question_text").notNull(),                  // 题目文本
-    student_answer: text("student_answer").notNull(),                // 学生作答
+    student_name: varchar("student_name", { length: 100 }).notNull().default('用户'),  // 学生姓名
+    subject: varchar("subject", { length: 50 }).notNull().default('语文'),           // 科目
+    question_text: text("question_text").notNull(),                   // 题目文本
+    student_answer: text("student_answer").notNull(),                 // 学生作答
     correct_answer: text("correct_answer"),                          // 正确答案（AI 计算）
     step_by_step: text("step_by_step"),                              // 规范分步过程
     is_correct: varchar("is_correct", { length: 10 }),               // 对错标记：correct / wrong
@@ -45,8 +45,8 @@ export const diagnosisRecords = pgTable(
   "diagnosis_records",
   {
     id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
-    student_name: varchar("student_name", { length: 100 }).notNull(),  // 学生姓名
-    subject: varchar("subject", { length: 50 }).notNull(),           // 科目
+    student_name: varchar("student_name", { length: 100 }).notNull().default('用户'),  // 学生姓名
+    subject: varchar("subject", { length: 50 }).notNull().default('语文'),           // 科目
     question_ids: jsonb("question_ids").notNull().default('[]'),      // 关联的错题ID列表
     error_type_stats: jsonb("error_type_stats"),                      // 错误类型统计 { "计算": 3, "概念": 1 }
     top_weaknesses: jsonb("top_weaknesses"),                          // Top3 知识短板 [{name, level, count}]

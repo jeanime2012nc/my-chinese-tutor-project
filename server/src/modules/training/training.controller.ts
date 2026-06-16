@@ -17,18 +17,20 @@ export class TrainingController {
 
   @Post('generate')
   @HttpCode(200)
-  async generate(@Body() body: { studentName: string; subject: string; diagnosisId: string }) {
-    this.logger.log(`生成训练: ${body.studentName}, ${body.subject}`);
+  async generate() {
+    this.logger.log('生成语文训练题');
 
-    const questions = await this.errorQuestionsService.getQuestionsByStudent(body.studentName);
-    const subjectQuestions = questions.filter(q => q.subject === body.subject);
-
-    if (subjectQuestions.length === 0) {
-      return { code: 200, msg: 'success', data: { message: '暂无错题记录' } };
+    const questions = await this.errorQuestionsService.getAllQuestions();
+    if (questions.length === 0) {
+      return { code: 200, msg: 'success', data: { message: '暂无批改记录，请先提交题目' } };
     }
 
+    // 获取最新诊断记录ID
+    const diagnoses = await this.diagnosisService.getAllDiagnoses();
+    const latestDiagnosisId = diagnoses.length > 0 ? diagnoses[0].id : null;
+
     // 统计薄弱等级
-    const weaknessLevels = subjectQuestions.map(q => q.weakness_level);
+    const weaknessLevels = questions.map(q => q.weakness_level);
     const severeCount = weaknessLevels.filter(l => l === 'severe').length;
     const moderateCount = weaknessLevels.filter(l => l === 'moderate').length;
 
@@ -36,7 +38,7 @@ export class TrainingController {
     if (severeCount >= 2) overallWeakness = 'severe';
     else if (moderateCount >= 2 || severeCount >= 1) overallWeakness = 'moderate';
 
-    const trainingQuestions = subjectQuestions.map(q => ({
+    const trainingQuestions = questions.map(q => ({
       questionText: q.question_text,
       knowledgePoints: q.knowledge_points || [],
       weaknessLevel: q.weakness_level,
@@ -44,29 +46,27 @@ export class TrainingController {
     }));
 
     const trainingResult = await this.aiService.generateTraining({
-      subject: body.subject,
       questions: trainingQuestions,
       weaknessLevel: overallWeakness,
     });
 
     const saved = await this.trainingService.saveTraining({
-      studentName: body.studentName,
-      subject: body.subject,
-      diagnosisId: body.diagnosisId,
+      diagnosisId: latestDiagnosisId,
       trainingData: trainingResult.trainingData,
       carefulTraining: trainingResult.carefulTraining,
       difficultyDistribution: trainingResult.difficultyDistribution,
-      questionIds: subjectQuestions.map(q => q.id as string),
+      questionIds: questions.map(q => q.id as string),
     });
 
     return { code: 200, msg: 'success', data: saved };
   }
 
-  @Get('list/:studentName')
+  @Get('latest')
   @HttpCode(200)
-  async listTrainings(@Param('studentName') studentName: string) {
-    const trainings = await this.trainingService.getTrainingsByStudent(studentName);
-    return { code: 200, msg: 'success', data: trainings };
+  async getLatestTraining() {
+    const trainings = await this.trainingService.getAllTrainings();
+    const latest = trainings.length > 0 ? trainings[0] : null;
+    return { code: 200, msg: 'success', data: latest };
   }
 
   @Get(':id')

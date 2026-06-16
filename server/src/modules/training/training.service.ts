@@ -11,25 +11,28 @@ export class TrainingService {
   ) {}
 
   async saveTraining(data: {
-    studentName: string;
-    subject: string;
-    diagnosisId: string;
+    diagnosisId: string | null;
     trainingData: Array<Record<string, any>>;
     carefulTraining: Array<Record<string, any>>;
     difficultyDistribution: Record<string, number>;
     questionIds: string[];
   }) {
+    const insertData: Record<string, any> = {
+      student_name: '用户',
+      subject: '语文',
+      question_ids: data.questionIds,
+      training_data: data.trainingData,
+      careful_training: data.carefulTraining,
+      difficulty_distribution: data.difficultyDistribution,
+    };
+    // 只有 diagnosisId 不为空时才设置外键
+    if (data.diagnosisId) {
+      insertData.diagnosis_id = data.diagnosisId;
+    }
+
     const { data: result, error } = await this.supabase
       .from('training_records')
-      .insert({
-        student_name: data.studentName,
-        subject: data.subject,
-        diagnosis_id: data.diagnosisId,
-        question_ids: data.questionIds,
-        training_data: data.trainingData,
-        careful_training: data.carefulTraining,
-        difficulty_distribution: data.difficultyDistribution,
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -40,11 +43,10 @@ export class TrainingService {
     return result;
   }
 
-  async getTrainingsByStudent(studentName: string) {
+  async getAllTrainings() {
     const { data, error } = await this.supabase
       .from('training_records')
       .select('*')
-      .eq('student_name', studentName)
       .order('created_at', { ascending: false });
 
     if (error) {

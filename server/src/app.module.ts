@@ -6,6 +6,7 @@ import { AiModule } from '@/modules/ai/ai.module';
 import { ErrorQuestionsModule } from '@/modules/error-questions/error-questions.module';
 import { DiagnosisModule } from '@/modules/diagnosis/diagnosis.module';
 import { TrainingModule } from '@/modules/training/training.module';
+import { UploadModule } from '@/modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TrainingModule } from '@/modules/training/training.module';
     ErrorQuestionsModule,
     DiagnosisModule,
     TrainingModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -12,71 +12,125 @@ export class AiService {
   }
 
   /**
-   * 批改单道错题：计算答案、分步过程、错误类型分析
+   * 高中语文对话式批改：支持文字/图片输入
+   * 用户输入可以是：题目+作答 或 仅题目 或 问题咨询
    */
-  async gradeQuestion(params: {
-    subject: string;
-    questionText: string;
-    studentAnswer: string;
+  async chatGrade(params: {
+    message: string;
+    imageUrl?: string;
+    history?: Array<{ role: string; content: string }>;
   }): Promise<{
-    correctAnswer: string;
-    stepByStep: string;
-    isCorrect: string;
-    errorType: string;
-    errorDetail: string;
-    trapAnalysis: string;
-    knowledgePoints: string[];
-    weaknessLevel: string;
+    reply: string;
+    grading?: {
+      correctAnswer: string;
+      stepByStep: string;
+      isCorrect: string;
+      errorType: string;
+      errorDetail: string;
+      trapAnalysis: string;
+      knowledgePoints: string[];
+      weaknessLevel: string;
+    };
   }> {
-    const prompt = `你是一名经验丰富的${params.subject}教师，正在批改学生的作业。
+    const messages: Array<any> = [
+      {
+        role: 'system',
+        content: `你是一位经验丰富的高中语文教师，擅长批改作文、阅读理解、古文翻译、诗歌鉴赏等语文题目。
 
-【题目】
-${params.questionText}
+你的回复风格：
+1. 自然对话体，像老师在和学生面对面交流
+2. 如果是批改题目，先用 warm-up 语气回应，再给出专业分析
+3. 批改时明确指出：答案对错、错误类型（审题/理解/知识/表达/思路错误）、详细分析、陷阱说明
+4. 鼓励性语气，帮助学生建立信心
+5. 排版清晰，重点内容使用 **加粗** 标注
+6. 如果是图片，先说明"已收到你的图片"，再进行分析
 
-【学生作答】
-${params.studentAnswer}
+回复结构（如果涉及批改）：
+- 先给出整体判断（正确/错误）
+- 然后对错误进行分层分析
+- 最后给出改进建议`,
+      },
+    ];
 
-请完成以下任务，严格按照 JSON 格式输出（不要有任何其他文字）：
+    // 添加历史消息（最近3轮）
+    if (params.history && params.history.length > 0) {
+      const recentHistory = params.history.slice(-6);
+      for (const msg of recentHistory) {
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+    }
 
-{
-  "correctAnswer": "本题的标准正确答案",
-  "stepByStep": "规范的分步解题过程，每一步清晰说明",
-  "isCorrect": "correct 或 wrong",
-  "errorType": "如果错误，指出错误类型：计算错误 / 概念错误 / 审题错误 / 思路错误 / 步骤错误 / 无错误",
-  "errorDetail": "详细说明学生的具体错误在哪里，指出错误步骤",
-  "trapAnalysis": "分析题目中设置了什么陷阱，以及学生陷入了什么思维误区",
-  "knowledgePoints": ["核心知识点1", "核心知识点2", "核心知识点3"],
-  "weaknessLevel": "mild 或 moderate 或 severe（根据该知识点掌握程度评估薄弱等级）"
-}`;
+    // 用户消息（支持图片）
+    const userContent: any = { type: 'text', text: params.message };
+    if (params.imageUrl) {
+      messages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: `【学生上传了一道题目图片，图片地址：${params.imageUrl}】\n请先解析图片中的题目内容，然后结合用户的消息进行批改。\n用户消息：${params.message}` },
+        ],
+      });
+    } else {
+      messages.push({
+        role: 'user',
+        content: params.message,
+      });
+    }
 
     try {
       const response = await this.client.invoke(
-        [
-          { role: 'system', content: '你是一位严谨细致的全科教师，擅长批改作业、分析错误、指导学生。请严格按照要求的 JSON 格式输出。' },
-          { role: 'user', content: prompt },
-        ],
-        { model: 'doubao-seed-2-0-pro-260215', temperature: 0.3 },
+        messages,
+        {
+          model: 'doubao-seed-2-0-pro-260215',
+          temperature: 0.4,
+        },
       );
 
-      const result = JSON.parse(response.content);
-      return {
-        correctAnswer: result.correctAnswer || '',
-        stepByStep: result.stepByStep || '',
-        isCorrect: result.isCorrect || 'wrong',
-        errorType: result.errorType || '无错误',
-        errorDetail: result.errorDetail || '',
-        trapAnalysis: result.trapAnalysis || '',
-        knowledgePoints: result.knowledgePoints || [],
-        weaknessLevel: result.weaknessLevel || 'moderate',
-      };
-    } catch (error) {
-      this.logger.error(`错题批改 AI 调用失败: ${error.message}`);
-      throw new Error('AI 批改服务异常，请重试');
+      const reply = response.content;
+
+      // 尝试从回复中提取结构化批改数据
+      let grading: {
+        correctAnswer: string;
+        stepByStep: string;
+        isCorrect: string;
+        errorType: string;
+        errorDetail: string;
+        trapAnalysis: string;
+        knowledgePoints: string[];
+        weaknessLevel: string;
+      } | undefined = undefined;
+      try {
+        const jsonMatch = reply.match(/\{[\s\S]*"isCorrect"[\s\S]*\}/);
+        if (jsonMatch) {
+          const jsonData = JSON.parse(jsonMatch[0]);
+          if (jsonData.isCorrect) {
+            grading = {
+              correctAnswer: jsonData.correctAnswer || '',
+              stepByStep: jsonData.stepByStep || '',
+              isCorrect: jsonData.isCorrect || 'wrong',
+              errorType: jsonData.errorType || '',
+              errorDetail: jsonData.errorDetail || '',
+              trapAnalysis: jsonData.trapAnalysis || '',
+              knowledgePoints: jsonData.knowledgePoints || [],
+              weaknessLevel: jsonData.weaknessLevel || 'moderate',
+            };
+          }
+        }
+      } catch {
+        // JSON 解析失败也没关系，对话体回复不需要结构化数据
+      }
+
+      return { reply, grading };
+    } catch (error: any) {
+      this.logger.error(`AI 对话调用失败: ${error.message}`);
+      throw new Error('AI 服务异常，请重试');
     }
   }
 
   /**
-   * 薄弱点诊断：汇总错题分析，生成诊断报告
+   * 薄弱点诊断（基于历史错题）
    */
   async diagnose(params: {
     questions: Array<{
@@ -95,24 +149,24 @@ ${params.studentAnswer}
     summary: string;
   }> {
     const questionsJson = JSON.stringify(params.questions, null, 2);
-
-    const prompt = `以下是一组学生的错题分析数据，请综合诊断，严格按照 JSON 格式输出：
+    const prompt = `以下是一位高中生的语文错题分析数据，请进行综合诊断，严格按照 JSON 格式输出：
 
 ${questionsJson}
 
 {
-  "errorTypeStats": { "计算错误": 3, "概念错误": 1, ... },
+  "errorTypeStats": { "审题错误": 2, "理解错误": 1, "知识记忆错误": 3 },
   "topWeaknesses": [
-    { "name": "最短知识短板名称", "level": "severe/moderate/mild", "count": 出现次数 },
-    ...
+    { "name": "具体知识短板名称（如：文言文虚词用法）", "level": "severe/moderate/mild", "count": 出现次数 },
+    { "name": "...", "level": "...", "count": ... },
+    { "name": "...", "level": "...", "count": ... }
   ],
-  "summary": "综合诊断总结，指出学生最需要加强的方向，语气鼓励且有建设性"
+  "summary": "综合诊断总结（对话体语气，鼓励且有针对性的建议）"
 }`;
 
     try {
       const response = await this.client.invoke(
         [
-          { role: 'system', content: '你是一位学习诊断专家，善于从学生的错题中找出薄弱点，给出有针对性的诊断建议。请严格按照 JSON 格式输出。' },
+          { role: 'system', content: '你是一位高中语文学习诊断专家，善于从学生的错题中找出薄弱点，给出有针对性的诊断建议。请严格按照 JSON 格式输出。' },
           { role: 'user', content: prompt },
         ],
         { model: 'doubao-seed-2-0-pro-260215', temperature: 0.3 },
@@ -124,27 +178,26 @@ ${questionsJson}
         topWeaknesses: result.topWeaknesses || [],
         summary: result.summary || '',
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`薄弱诊断 AI 调用失败: ${error.message}`);
       throw new Error('诊断服务异常，请重试');
     }
   }
 
   /**
-   * 生成个性化训练题目
+   * 生成个性化语文训练题
    */
   async generateTraining(params: {
-    subject: string;
     questions: Array<{
       questionText: string;
       knowledgePoints: string[];
       weaknessLevel: string;
       errorType: string;
     }>;
-    weaknessLevel: string; // 总体薄弱等级
+    weaknessLevel: string;
   }): Promise<{
     trainingData: Array<{
-      type: string;        // basic / medium / advanced
+      type: string;
       question: string;
       answer: string;
       analysis: string;
@@ -160,14 +213,16 @@ ${questionsJson}
   }> {
     const questionsJson = JSON.stringify(params.questions, null, 2);
     const hasCarelessErrors = params.questions.some(
-      q => q.errorType.includes('审题') || q.errorType.includes('计算'),
+      q => q.errorType.includes('审题') || q.errorType.includes('表达') || q.errorType.includes('书写'),
     );
 
-    const prompt = `你是一名经验丰富的${params.subject}教师，需要为学生设计个性化训练题。
+    const prompt = `你是一名经验丰富的高中语文教师，需要为学生设计个性化语文训练题。
 
 学生当前的薄弱等级：${params.weaknessLevel}
-学生错题分析：${questionsJson}
-${hasCarelessErrors ? '⚠️ 学生存在审题/计算失误，需要额外增加细心专项训练。' : ''}
+学生语文错题分析：${questionsJson}
+${hasCarelessErrors ? '⚠️ 学生存在审题/表达失误，需要额外增加细心专项训练。' : ''}
+
+题目类型可涵盖：现代文阅读、文言文阅读、古诗词鉴赏、语言文字运用、作文审题等。
 
 请按照以下比例分配训练题：
 - 重度薄弱（severe）：60% 为基础巩固题
@@ -194,7 +249,7 @@ ${hasCarelessErrors ? '- 额外增加 5 道细心专项训练题' : ''}
   },
   "carefulTraining": ${hasCarelessErrors ? `[
     {
-      "question": "细心专项题1（注重审题和计算细节）",
+      "question": "细心专项题（注重审题和表达细节的语文题）",
       "answer": "答案",
       "analysis": "解析，重点标注易错点",
       "tip": "避坑提醒"
@@ -205,7 +260,7 @@ ${hasCarelessErrors ? '- 额外增加 5 道细心专项训练题' : ''}
     try {
       const response = await this.client.invoke(
         [
-          { role: 'system', content: '你是一位经验丰富的出题教师，擅长根据学生薄弱点设计个性化训练题目。请严格按照 JSON 格式输出。' },
+          { role: 'system', content: '你是一位经验丰富的高中语文教师，擅长根据学生薄弱点设计个性化训练题目。请严格按照 JSON 格式输出。' },
           { role: 'user', content: prompt },
         ],
         { model: 'doubao-seed-2-0-pro-260215', temperature: 0.5 },
@@ -217,7 +272,7 @@ ${hasCarelessErrors ? '- 额外增加 5 道细心专项训练题' : ''}
         difficultyDistribution: result.difficultyDistribution || { basic: 0, medium: 0, advanced: 0 },
         carefulTraining: result.carefulTraining || [],
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`训练生成 AI 调用失败: ${error.message}`);
       throw new Error('训练题生成服务异常，请重试');
     }
