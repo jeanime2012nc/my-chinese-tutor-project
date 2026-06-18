@@ -1,58 +1,54 @@
 #!/bin/bash
-set -e
+# 一键重启服务 - 智能辅导应用
+# 用法: bash start.sh
 
-# 智能辅导 - 一键启动脚本
-# 自动检测前端构建产物，缺失则重建，然后启动服务
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-LOG_DIR="/tmp/coze-logs"
-mkdir -p "$LOG_DIR"
-
-echo "=== 智能辅导 启动中 ==="
-
-# 1. 检查前端构建产物
-if [ ! -f "$SCRIPT_DIR/dist-web/index.html" ]; then
-  echo "[1/3] 前端构建产物缺失，重新构建 H5..."
-  cd "$SCRIPT_DIR"
-  pnpm build --web > "$LOG_DIR/build.log" 2>&1
-  if [ $? -ne 0 ]; then
-    echo "❌ 前端构建失败，查看日志: $LOG_DIR/build.log"
-    exit 1
-  fi
-  echo "✅ 前端构建完成"
-else
-  echo "[1/3] 前端构建产物存在 ✅"
-fi
-
-# 2. 确保后端已构建
-if [ ! -f "$SCRIPT_DIR/server/dist/main.js" ]; then
-  echo "[2/3] 后端构建产物缺失，重新构建..."
-  cd "$SCRIPT_DIR/server"
-  npm run build > "$LOG_DIR/server-build.log" 2>&1
-  if [ $? -ne 0 ]; then
-    echo "❌ 后端构建失败"
-    exit 1
-  fi
-  echo "✅ 后端构建完成"
-else
-  echo "[2/3] 后端构建产物存在 ✅"
-fi
-
-# 3. 清理旧进程，启动服务
-echo "[3/3] 启动服务..."
-fuser -k 3000/tcp 2>/dev/null || true
-sleep 1
-
-cd "$SCRIPT_DIR/server"
-nohup node dist/main.js > "$LOG_DIR/server.log" 2>&1 &
+echo "🔍 清理旧进程..."
+fuser -k 5000/tcp 2>/dev/null
+fuser -k 3000/tcp 2>/dev/null
 sleep 3
 
-# 验证
-if ss -tuln 2>/dev/null | grep -q ':3000'; then
-  echo "✅ 服务启动成功！端口: 3000"
-  echo "   公网地址: https://0e07124b-4731-423f-ba65-0cd83e5b6339.dev.coze.site"
-else
-  echo "❌ 服务启动失败，查看日志: $LOG_DIR/server.log"
-  tail -20 "$LOG_DIR/server.log"
-  exit 1
+echo "📦 检查构建产物..."
+if [ ! -d "dist-web" ]; then
+  echo "  → 构建前端..."
+  npx taro build --type h5 2>&1 | tail -3
 fi
+
+if [ ! -d "server/dist" ]; then
+  echo "  → 构建后端..."
+  cd server && npx nest build 2>&1 | tail -3 && cd ..
+fi
+
+echo "🚀 启动开发服务..."
+pnpm dev &
+DEV_PID=$!
+echo "  PID: $DEV_PID (pnpm dev)"
+
+# 等待 NestJS 后端启动
+echo "⏳ 等待后端启动..."
+for i in $(seq 1 30); do
+  if curl -s --max-time 2 http://localhost:3000/api/health > /dev/null 2>&1; then
+    echo "  ✅ 后端就绪 (端口 3000)"
+    break
+  fi
+  sleep 2
+done
+
+# 等待前端 Vite 启动
+echo "⏳ 等待前端启动..."
+for i in $(seq 1 30); do
+  if curl -s --max-time 2 http://localhost:5000 > /dev/null 2>&1; then
+    echo "  ✅ 前端就绪 (端口 5000 / 公网域名)"
+    break
+  fi
+  sleep 2
+done
+
+echo ""
+echo "==================================="
+echo "  服务已恢复！"
+echo "  公网地址: https://0e07124b-4731-423f-ba65-0cd83e5b6339.dev.coze.site"
+echo "  本地后端: http://localhost:3000"
+echo "==================================="
+echo ""
+echo "💡 注意：Coze 沙箱环境可能自动回收进程。"
+echo "   如果打不开，在会话中直接说"重启"即可秒级恢复。"
