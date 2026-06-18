@@ -43,6 +43,11 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
+# 启动保活脚本
+echo "🛡️ 启动保活守护..."
+setsid /workspace/projects/keepalive.sh > /dev/null 2>&1 &
+echo "  ✅ 保活已启动（每1-2分钟检测一次）"
+
 echo ""
 echo "==================================="
 echo "  服务已恢复！"
@@ -50,5 +55,5 @@ echo "  公网地址: https://0e07124b-4731-423f-ba65-0cd83e5b6339.dev.coze.site
 echo "  本地后端: http://localhost:3000"
 echo "==================================="
 echo ""
-echo "💡 注意：Coze 沙箱环境可能自动回收进程。"
-echo "   如果打不开，在会话中直接说"重启"即可秒级恢复。"
+echo "💡 保活脚本正在后台运行，会自动检测并重启。"
+echo "   如果仍打不开，在会话中直接说"重启"即可。"
