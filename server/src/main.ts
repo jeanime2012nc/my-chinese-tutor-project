@@ -6,13 +6,15 @@ import { existsSync, readFileSync } from 'fs';
 import { HttpStatusInterceptor } from '@/interceptors/http-status.interceptor';
 
 function parsePort(): number {
+  if (process.env.PORT) {
+    const port = parseInt(process.env.PORT, 10);
+    if (!isNaN(port) && port > 0 && port < 65536) return port;
+  }
   const args = process.argv.slice(2);
   const portIndex = args.indexOf('-p');
   if (portIndex !== -1 && args[portIndex + 1]) {
     const port = parseInt(args[portIndex + 1], 10);
-    if (!isNaN(port) && port > 0 && port < 65536) {
-      return port;
-    }
+    if (!isNaN(port) && port > 0 && port < 65536) return port;
   }
   return 3000;
 }
