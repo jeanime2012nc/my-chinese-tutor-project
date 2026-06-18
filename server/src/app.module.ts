@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import { DatabaseModule } from '@/storage/database/database.module';
@@ -10,6 +12,13 @@ import { UploadModule } from '@/modules/upload/upload.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'dist-web'),
+      exclude: ['/api/(.*)'],
+      serveStaticOptions: {
+        extensions: ['html'],
+      },
+    }),
     DatabaseModule,
     AiModule,
     ErrorQuestionsModule,
