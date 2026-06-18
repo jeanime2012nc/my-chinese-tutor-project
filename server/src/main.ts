@@ -6,9 +6,15 @@ import { existsSync, readFileSync } from 'fs';
 import { HttpStatusInterceptor } from '@/interceptors/http-status.interceptor';
 
 function parsePort(): number {
+  // 优先使用 SERVER_PORT（独立于 web 服务的 PORT 变量）
+  if (process.env.SERVER_PORT) {
+    const port = parseInt(process.env.SERVER_PORT, 10);
+    if (!isNaN(port) && port > 0 && port < 65536) return port;
+  }
+  // 再尝试 PORT（但跳过 dev_run.sh 设置的 5000，那是 web 服务的端口）
   if (process.env.PORT) {
     const port = parseInt(process.env.PORT, 10);
-    if (!isNaN(port) && port > 0 && port < 65536) return port;
+    if (!isNaN(port) && port > 0 && port < 65536 && port !== 5000) return port;
   }
   const args = process.argv.slice(2);
   const portIndex = args.indexOf('-p');
