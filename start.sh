@@ -8,7 +8,7 @@ fuser -k 5000/tcp 2>/dev/null; fuser -k 3000/tcp 2>/dev/null
 sleep 3
 
 echo "✅ 启动生产模式..."
-cd "$PROJECT_DIR" && SERVER_PORT=5000 node server/dist/main.js &
+setsid bash -c "cd '$PROJECT_DIR' && SERVER_PORT=5000 node server/dist/main.js" > /dev/null 2>&1 &
 echo "⏳ 等待就绪..."
 
 for i in $(seq 1 10); do
