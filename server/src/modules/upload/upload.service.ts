@@ -8,8 +8,9 @@ export class UploadService {
   private bucketName: string;
 
   constructor() {
-    const supabaseUrl = process.env.COZE_SUPABASE_URL;
-    const supabaseKey = process.env.COZE_SUPABASE_SERVICE_ROLE_KEY || process.env.COZE_SUPABASE_ANON_KEY;
+    // 兼容 COZE_ 前缀和标准变量名
+    const supabaseUrl = process.env.COZE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.COZE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.COZE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
     this.bucketName = process.env.STORAGE_BUCKET || 'uploads';
 
     if (!supabaseUrl || !supabaseKey) {
