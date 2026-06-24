@@ -118,7 +118,8 @@ export default function Index() {
       Taro.hideLoading()
       console.log('上传结果:', uploadRes.data)
 
-      const { url } = JSON.parse(uploadRes.data as string).data
+      const respData = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
+      const { url } = respData.data
       setPendingImage(url)
       scrollToBottom()
     } catch (error) {
