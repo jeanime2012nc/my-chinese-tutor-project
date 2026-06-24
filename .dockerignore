@@ -1,0 +1,12 @@
+node_modules
+.pnpm-store
+.git
+.gitignore
+dist
+dist-web
+dist-weapp
+dist-tt
+*.md
+.env
+.env.*
+assets/
