@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { Network } from '@/network'
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Target, TriangleAlert } from 'lucide-react-taro'
+import { Target, TriangleAlert, RefreshCw } from 'lucide-react-taro'
 
 interface DiagnosisResult {
   id: string
@@ -14,30 +14,38 @@ interface DiagnosisResult {
   error_type_stats: Record<string, number>
   top_weaknesses: { name: string; count: number; level: string }[]
   summary: string
-}
-
-// 示例数据：统编版必修下第八单元常见薄弱点
-const SAMPLE_RESULT: DiagnosisResult = {
-  id: 'sample',
-  question_ids: ['1', '2', '3', '4', '5'],
-  error_type_stats: {
-    '字音字形混淆': 3,
-    '文言实词多义辨析错误': 2,
-    '翻译题采分点遗漏': 2,
-    '文本主旨概括不全': 1,
-    '对比分析思路不清': 1,
-  },
-  top_weaknesses: [
-    { name: '《谏太宗十思疏》字音字形与易错字', count: 3, level: 'severe' },
-    { name: '文言实词多义辨析（克/休/负/诚）', count: 2, level: 'moderate' },
-    { name: '翻译判断句与使动用法采分点', count: 2, level: 'moderate' },
-  ],
-  summary: '**第八单元**重点在于《谏太宗十思疏》和《答司马谏议书》的文言基础与思辨逻辑。\n\n① **字音字形**：注意"壅(yōng)蔽""黜(chù)恶""浚(jùn)泉源""载(zài)舟覆舟"等高频易错字，建议逐字抄写三遍。\n② **实词辨析**："克"有"能够/克制"二义；"休"有"福禄/停止"之别；"负"有"辜负/凭借/背弃"多义，需结合语境判断。\n③ **翻译题**：注意判断句式（"……者……也"）、使动用法（"固其根本""安其位"等），逐一标注采分点。\n④ **思辨对比**：《谏太宗十思疏》与《答司马谏议书》均为古代论说文，前者劝谏君主居安思危，后者回应政敌坚守变法初心，建议梳理两篇文章的论证思路。',
+  student_name?: string
+  subject?: string
+  created_at?: string
 }
 
 export default function Diagnosis() {
-  const [result, setResult] = useState<DiagnosisResult | null>(SAMPLE_RESULT)
+  const [result, setResult] = useState<DiagnosisResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [initLoading, setInitLoading] = useState(true)
+
+  // 页面加载时获取最新诊断
+  useEffect(() => {
+    fetchLatest()
+  }, [])
+
+  const fetchLatest = async () => {
+    setInitLoading(true)
+    try {
+      const res = await Network.request({
+        url: '/api/diagnosis/latest',
+        method: 'GET',
+      })
+      console.log('[诊断] 最新记录:', res.data)
+      if (res.data?.data) {
+        setResult(res.data.data)
+      }
+    } catch (err) {
+      console.error('[诊断] 获取最新记录失败:', err)
+    } finally {
+      setInitLoading(false)
+    }
+  }
 
   const handleDiagnose = async () => {
     setLoading(true)
@@ -47,11 +55,15 @@ export default function Diagnosis() {
         method: 'POST',
         data: {},
       })
-      console.log('诊断结果:', res.data)
-      setResult(res.data.data)
-    } catch (err) {
-      console.error('诊断失败:', err)
-      Taro.showToast({ title: '诊断失败，请先提交几道错题', icon: 'none' })
+      console.log('[诊断] 生成结果:', res.data)
+      if (res.data?.data) {
+        setResult(res.data.data)
+      } else {
+        Taro.showToast({ title: '暂无错题记录，请先对话批改', icon: 'none' })
+      }
+    } catch (err: any) {
+      console.error('[诊断] 失败:', err)
+      Taro.showToast({ title: '诊断失败：' + (err.message || '请稍后重试'), icon: 'none' })
     } finally {
       setLoading(false)
     }
@@ -79,26 +91,42 @@ export default function Diagnosis() {
       </View>
 
       <ScrollView className="flex-1 px-4 pt-3 pb-6">
-        {/* 示例数据提示 */}
-        {result?.id === 'sample' && (
-          <View className="mb-3 bg-blue-50 rounded-xl px-4 py-2">
-            <Text className="block text-xs text-blue-600">
-              以下为统编版必修下第八单元常见薄弱点示例，提交更多错题可生成你的专属诊断
-            </Text>
-          </View>
-        )}
-
-        {loading && (
+        {/* 初始加载骨架屏 */}
+        {initLoading && (
           <View className="mt-4 space-y-3">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-40 w-full rounded-xl" />
           </View>
         )}
 
+        {/* 空状态 */}
+        {!initLoading && !result && (
+          <View className="mt-16">
+            <Card>
+              <CardContent className="p-6">
+                <View className="flex items-center justify-center mb-4">
+                  <Target size={48} color="#93c5fd" />
+                </View>
+                <Text className="block text-center text-base font-semibold text-gray-800 mb-2">
+                  暂无诊断数据
+                </Text>
+                <Text className="block text-center text-sm text-gray-500 mb-6">
+                  先去「智能辅导」页面提交几道题目，AI 批改后会自动生成薄弱点诊断
+                </Text>
+                <Button className="w-full" onClick={handleDiagnose} disabled={loading}>
+                  <Text className="block text-white font-medium">
+                    {loading ? '诊断中...' : '开始诊断分析'}
+                  </Text>
+                </Button>
+              </CardContent>
+            </Card>
+          </View>
+        )}
+
+        {/* 诊断结果 */}
         {result && (
           <View className="space-y-4">
-            {/* 计算统计数据 */}
             {(() => {
               const totalCount = result.question_ids?.length || 0
               const stats = result.error_type_stats || {}
@@ -114,7 +142,7 @@ export default function Diagnosis() {
                   {/* 总体统计 */}
                   <Card>
                     <CardContent className="p-4">
-                      <Text className="block text-base font-bold text-gray-900 mb-3">📊 错题统计</Text>
+                      <Text className="block text-base font-bold text-gray-900 mb-3">错题统计</Text>
                       <Text className="block text-3xl font-bold text-blue-600 mb-3">{totalCount}</Text>
                       <Text className="block text-sm text-gray-500 mb-3">道错题 / 知识点薄弱点</Text>
                       <View className="space-y-2">
@@ -139,7 +167,7 @@ export default function Diagnosis() {
                   {/* Top 薄弱点 */}
                   <Card>
                     <CardContent className="p-4">
-                      <Text className="block text-base font-bold text-gray-900 mb-3">🎯 Top 3 优先巩固</Text>
+                      <Text className="block text-base font-bold text-gray-900 mb-3">Top 3 优先巩固</Text>
                       <View className="space-y-3">
                         {(result.top_weaknesses || []).slice(0, 3).map((w, idx) => (
                           <View key={idx} className="border border-gray-100 rounded-xl p-3">
@@ -151,9 +179,10 @@ export default function Diagnosis() {
                                 <Text className="block text-xs">{severityLabel(w.level)}</Text>
                               </Badge>
                             </View>
-                            <Text className="block text-xs text-red-500 mb-1">
-                              <TriangleAlert size={12} color="#ef4444" /> 错误 {w.count} 次
-                            </Text>
+                            <View className="flex flex-row items-center gap-1">
+                              <TriangleAlert size={12} color="#ef4444" />
+                              <Text className="block text-xs text-red-500">错误 {w.count} 次</Text>
+                            </View>
                           </View>
                         ))}
                       </View>
@@ -163,14 +192,21 @@ export default function Diagnosis() {
                   {/* 总结建议 */}
                   <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
                     <CardContent className="p-4">
-                      <Text className="block text-base font-bold text-gray-900 mb-2">💡 学习建议</Text>
+                      <Text className="block text-base font-bold text-gray-900 mb-2">学习建议</Text>
                       <Text className="block text-sm text-gray-700 leading-relaxed">{result.summary}</Text>
                     </CardContent>
                   </Card>
 
-                  <Button variant="secondary" onClick={handleDiagnose} className="w-full">
-                    <Text className="block text-sm">重新诊断</Text>
-                  </Button>
+                  {/* 操作按钮 */}
+                  <View className="flex flex-row gap-3">
+                    <Button variant="secondary" onClick={handleDiagnose} className="flex-1" disabled={loading}>
+                      <RefreshCw size={16} color="#6b7280" />
+                      <Text className="block text-sm ml-1">{loading ? '诊断中...' : '重新诊断'}</Text>
+                    </Button>
+                    <Button variant="outline" onClick={fetchLatest} className="flex-shrink-0">
+                      <RefreshCw size={16} color="#6b7280" />
+                    </Button>
+                  </View>
                 </>
               )
             })()}
