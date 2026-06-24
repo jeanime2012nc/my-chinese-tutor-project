@@ -108,7 +108,8 @@ export default function Index() {
       // 先上传图片
       const chooseRes = await Taro.chooseImage({ count: 1, sizeType: ['compressed'] })
       const tempPath = chooseRes.tempFilePaths[0]
-      const isMiniApp = [Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv())
+      const env = Taro.getEnv()
+const isMiniApp = env === Taro.ENV_TYPE.WEAPP || env === Taro.ENV_TYPE.TT
 
       Taro.showLoading({ title: '上传图片中...' })
 
@@ -123,12 +124,14 @@ export default function Index() {
         const respData = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data as string) : uploadRes.data
         uploadedUrl = respData.data.url
       } else {
-        // H5 端：取原始 File 对象手动构建 FormData（绕过 blob URL 问题）
-        const fileObj = chooseRes.tempFiles[0]?.file || chooseRes.tempFiles[0]
+        // H5 端：通过 blob URL 获取原始 File
+        const rawFile = chooseRes.tempFiles[0]
+        const blob = await fetch(rawFile.path || tempPath).then(r => r.blob())
+        const fileObj = new File([blob], 'image.jpg', { type: blob.type || 'image/jpeg' })
         const formData = new FormData()
         formData.append('file', fileObj)
         const xhr = new XMLHttpRequest()
-        xhr.timeout = 15000
+        xhr.timeout = 30000
         const resp = await new Promise<any>((resolve, reject) => {
           xhr.onreadystatechange = () => {
             if (xhr.readyState === XMLHttpRequest.DONE) {

@@ -7,10 +7,8 @@ async function callLLM(
 ): Promise<string> {
   const { LLMClient, Config } = await import('coze-coding-dev-sdk');
 
-  const apiKey = process.env.LLM_API_KEY;
-  const baseUrl = process.env.LLM_BASE_URL;
-
-  const config = new Config({ apiKey, baseUrl });
+  // Config 自动从环境变量加载凭证，无需手动传参
+  const config = new Config();
   const client = new LLMClient(config);
 
   const response = await client.invoke(
@@ -19,9 +17,10 @@ async function callLLM(
       content: m.content,
     })),
     {
-      model: 'doubao-seed-2.0-pro',
+      model: 'doubao-seed-2-0-pro-260215',
       temperature: options?.temperature ?? 0.4,
-      streaming: false,
+      // 注意：不传 streaming: false，Coze API 始终返回 SSE 格式，
+      // SDK 默认 streaming: true 并在 invoke 内部自动聚合
     },
   );
 
