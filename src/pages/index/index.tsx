@@ -128,6 +128,7 @@ export default function Index() {
         const formData = new FormData()
         formData.append('file', fileObj)
         const xhr = new XMLHttpRequest()
+        xhr.timeout = 15000
         const resp = await new Promise<any>((resolve, reject) => {
           xhr.onreadystatechange = () => {
             if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -138,6 +139,8 @@ export default function Index() {
               }
             }
           }
+          xhr.ontimeout = () => reject(new Error('上传超时'))
+          xhr.onerror = () => reject(new Error('网络错误'))
           xhr.open('POST', '/api/upload/image')
           xhr.send(formData)
         })
@@ -148,10 +151,10 @@ export default function Index() {
       console.log('上传成功，图片URL:', uploadedUrl)
       setPendingImage(uploadedUrl)
       scrollToBottom()
-    } catch (error) {
-      console.error('上传图片失败:', error)
+    } catch (error: any) {
+      console.error('上传图片失败:', error?.message || error)
       Taro.hideLoading()
-      Taro.showToast({ title: '图片上传失败', icon: 'none' })
+      Taro.showToast({ title: error?.message || '图片上传失败', icon: 'none' })
     }
   }
 
