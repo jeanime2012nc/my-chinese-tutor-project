@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd server && npm install --ignore-scripts && npm run build"
+buildCommand = "pnpm install && pnpm --filter server build"
 
 [deploy]
 startCommand = "cd server && node dist/main.js"
