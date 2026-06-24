@@ -1,30 +1,65 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-/** 调用 LLM 的统一方法（使用 Coze SDK） */
+/** 调用 LLM 的统一方法（兼容 SSE 流式与标准 JSON 响应） */
 async function callLLM(
   messages: Array<{ role: string; content: any }>,
   options?: { temperature?: number; maxTokens?: number },
 ): Promise<string> {
-  const { LLMClient, Config } = await import('coze-coding-dev-sdk');
+  const apiKey = process.env.LLM_API_KEY || process.env.COZE_WORKLOAD_IDENTITY_API_KEY;
+  const baseUrl = process.env.LLM_BASE_URL || process.env.COZE_INTEGRATION_MODEL_BASE_URL || 'https://api.openai.com/v1';
+  const model = process.env.LLM_MODEL || 'doubao-seed-2-0-pro-260215';
 
-  // Config 自动从环境变量加载凭证，无需手动传参
-  const config = new Config();
-  const client = new LLMClient(config);
+  if (!apiKey) {
+    throw new Error('未配置 LLM_API_KEY 环境变量');
+  }
 
-  const response = await client.invoke(
-    messages.map((m) => ({
-      role: m.role as 'system' | 'user' | 'assistant',
-      content: m.content,
-    })),
-    {
-      model: 'doubao-seed-2-0-pro-260215',
-      temperature: options?.temperature ?? 0.4,
-      // 注意：不传 streaming: false，Coze API 始终返回 SSE 格式，
-      // SDK 默认 streaming: true 并在 invoke 内部自动聚合
+  const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
     },
-  );
+    body: JSON.stringify({
+      model,
+      messages: messages.map((m) => ({
+        role: m.role as 'system' | 'user' | 'assistant',
+        content: m.content,
+      })),
+      temperature: options?.temperature ?? 0.4,
+      max_tokens: options?.maxTokens ?? 4096,
+      stream: false,
+    }),
+  });
 
-  return response.content;
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`LLM 请求失败 [${response.status}]: ${text.slice(0, 200)}`);
+  }
+
+  const raw = await response.text();
+
+  // 尝试标准 JSON 解析（OpenAI 兼容 API）
+  try {
+    const body = JSON.parse(raw);
+    const content = body.choices?.[0]?.message?.content;
+    if (content) return content;
+  } catch {}
+
+  // 尝试 SSE 流式解析（Coze API 代理始终返回 SSE 格式）
+  const lines = raw.split('\n').filter((l) => l.startsWith('data: '));
+  let fullContent = '';
+  for (const line of lines) {
+    const jsonStr = line.slice(6).trim();
+    if (jsonStr === '[DONE]') continue;
+    try {
+      const chunk = JSON.parse(jsonStr);
+      const delta = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.message?.content || '';
+      fullContent += delta;
+    } catch {}
+  }
+  if (fullContent) return fullContent;
+
+  throw new Error(`LLM 响应解析失败，原始响应前 200 字符: ${raw.slice(0, 200)}`);
 }
 
 /** 从文本中提取 JSON 对象 */
