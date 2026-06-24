@@ -108,18 +108,45 @@ export default function Index() {
       // 先上传图片
       const chooseRes = await Taro.chooseImage({ count: 1, sizeType: ['compressed'] })
       const tempPath = chooseRes.tempFilePaths[0]
+      const isMiniApp = [Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv())
 
       Taro.showLoading({ title: '上传图片中...' })
-      const uploadRes = await Network.uploadFile({
-        url: '/api/upload/image',
-        filePath: tempPath,
-        name: 'file',
-      })
-      Taro.hideLoading()
-      console.log('上传结果:', uploadRes.data)
 
-      const respData = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data) : uploadRes.data
-      const { url } = respData.data
+      let uploadedUrl: string
+      if (isMiniApp) {
+        // 小程序端直接用 Network.uploadFile
+        const uploadRes = await Network.uploadFile({
+          url: '/api/upload/image',
+          filePath: tempPath,
+          name: 'file',
+        })
+        const respData = typeof uploadRes.data === 'string' ? JSON.parse(uploadRes.data as string) : uploadRes.data
+        uploadedUrl = respData.data.url
+      } else {
+        // H5 端：取原始 File 对象手动构建 FormData（绕过 blob URL 问题）
+        const fileObj = chooseRes.tempFiles[0]?.file || chooseRes.tempFiles[0]
+        const formData = new FormData()
+        formData.append('file', fileObj)
+        const xhr = new XMLHttpRequest()
+        const resp = await new Promise<any>((resolve, reject) => {
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText))
+              } else {
+                reject(new Error(`upload fail ${xhr.status}`))
+              }
+            }
+          }
+          xhr.open('POST', '/api/upload/image')
+          xhr.send(formData)
+        })
+        uploadedUrl = resp.data.url
+      }
+
+      Taro.hideLoading()
+      console.log('上传成功，图片URL:', uploadedUrl)
+      setPendingImage(uploadedUrl)
       setPendingImage(url)
       scrollToBottom()
     } catch (error) {
