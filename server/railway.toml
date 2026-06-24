@@ -1,7 +1,18 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm run build"
+buildCommand = "cd .. && npm install && npx taro build --type h5 && cd server && npm install && npm run build"
+watchPatterns = ["src/**", "../src/**", "../dist-web/**"]
 
 [deploy]
 startCommand = "node dist/main.js"
 healthcheckPath = "/api/health"
+restartPolicyType = "always"
+
+[env]
+NODE_ENV = "production"
+SERVER_PORT = "8000"
+LLM_API_KEY = "RERYajhBMmFoSlgwVXdoYlNyaVNmYmxCcldMNndoenA6bTVqU0dZMjNxUXBGNXVEVGJhOUdEdXl2M1VPVmdkaWdETXZwTjd2ZmxDNTRjdWtINmZhOVRzbDVUTUV2MlUwWQ=="
+LLM_BASE_URL = "https://integration.coze.cn/api/v3"
+SUPABASE_URL = "https://br-deft-hake-5f6db98c.supabase2.aidap-global.cn-beijing.volces.com"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjMzNjIxNDAyMzMsInJvbGUiOiJhbm9uIn0.O89bYYksB43n6fwG_7uq03opEv6r5g0KZvNIiDOyJ38"
+SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjMzNjIxNDAyMzMsInJvbGUiOiJzZXJ2aWNlX3JvbGUifQ.05SG6foQMSwG-pjwiDcNBJpmuZ51Vf4SodtGA3V9lss"

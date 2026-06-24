@@ -3,7 +3,15 @@ import { AppModule } from '@/app.module';
 import * as express from 'express';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
+import { config } from 'dotenv';
+import { resolve } from 'path';
 import { HttpStatusInterceptor } from '@/interceptors/http-status.interceptor';
+
+// 加载 .env 文件（本地开发用，生产环境通过平台环境变量）
+const envPath = resolve(__dirname, '../.env');
+if (existsSync(envPath)) {
+  config({ path: envPath });
+}
 
 function parsePort(): number {
   // 优先使用 SERVER_PORT（独立于 web 服务的 PORT 变量）

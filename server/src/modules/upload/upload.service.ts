@@ -1,36 +1,96 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { S3Storage } from 'coze-coding-dev-sdk';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
-  private storage: S3Storage;
+  private supabase: SupabaseClient;
+  private bucketName: string;
 
   constructor() {
-    this.storage = new S3Storage({
-      endpointUrl: process.env.COZE_BUCKET_ENDPOINT_URL,
-      bucketName: process.env.COZE_BUCKET_NAME,
-      region: 'cn-beijing',
+    const supabaseUrl = process.env.COZE_SUPABASE_URL;
+    const supabaseKey = process.env.COZE_SUPABASE_SERVICE_ROLE_KEY || process.env.COZE_SUPABASE_ANON_KEY;
+    this.bucketName = process.env.STORAGE_BUCKET || 'uploads';
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase 凭证未设置');
+    }
+
+    this.supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    this.ensureBucket();
+    this.logger.log(`Upload Service initialized, bucket: ${this.bucketName}`);
   }
 
-  async uploadImage(buffer: Buffer, originalName: string): Promise<{ key: string; url: string }> {
-    const ext = originalName.split('.').pop() || 'png';
-    const fileName = `chinese-tutor/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+  private async ensureBucket(): Promise<void> {
+    try {
+      const { data: buckets } = await this.supabase.storage.listBuckets();
+      const exists = buckets?.some((b) => b.name === this.bucketName);
+      if (!exists) {
+        await this.supabase.storage.createBucket(this.bucketName, {
+          public: true,
+        });
+        this.logger.log(`Bucket "${this.bucketName}" created`);
+      }
+    } catch (error: any) {
+      this.logger.warn(`Bucket 检查失败: ${error.message}，可能 bucket 已存在`);
+    }
+  }
 
-    const fileKey = await this.storage.uploadFile({
-      fileContent: buffer,
-      fileName,
-      contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+  /**
+   * 上传文件到 Supabase Storage
+   */
+  async uploadFile(
+    filePath: string,
+    fileBuffer: Buffer,
+    options?: { contentType?: string },
+  ): Promise<{ url: string; key: string }> {
+    const fileName = filePath.replace(/^\//, '');
+    const contentType = options?.contentType || 'application/octet-stream';
+
+    const { data, error } = await this.supabase.storage
+      .from(this.bucketName)
+      .upload(fileName, fileBuffer, {
+        contentType,
+        upsert: true,
+      });
+
+    if (error) {
+      this.logger.error(`文件上传失败: ${error.message}`);
+      throw error;
+    }
+
+    const { data: urlData } = this.supabase.storage
+      .from(this.bucketName)
+      .getPublicUrl(fileName);
+
+    this.logger.log(`文件上传成功: ${fileName}`);
+    return { url: urlData.publicUrl, key: fileName };
+  }
+
+  /**
+   * 生成临时访问链接（Supabase Storage 的公共 bucket 不需要签名 URL）
+   */
+  async generatePresignedUrl(key: string): Promise<{ url: string }> {
+    const { data } = this.supabase.storage
+      .from(this.bucketName)
+      .getPublicUrl(key);
+
+    return { url: data.publicUrl };
+  }
+
+  /**
+   * 上传图片（兼容 controller 调用）
+   */
+  async uploadImage(fileBuffer: Buffer, fileName: string): Promise<{ url: string; key: string }> {
+    const path = await import('path');
+    const ext = path.extname(fileName) || '.jpg';
+    const key = `images/${Date.now()}${ext}`;
+
+    return this.uploadFile(key, fileBuffer, {
+      contentType: `image/${ext.replace('.', '')}`,
     });
-
-    this.logger.log(`图片上传成功: ${fileKey}`);
-
-    const url = await this.storage.generatePresignedUrl({
-      key: fileKey,
-      expireTime: 86400, // 1天有效期
-    });
-
-    return { key: fileKey, url };
   }
 }

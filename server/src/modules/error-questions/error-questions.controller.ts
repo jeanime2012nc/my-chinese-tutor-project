@@ -23,29 +23,49 @@ export class ErrorQuestionsController {
   }) {
     this.logger.log(`对话批改: ${body.message.substring(0, 40)}...`);
 
-    const result = await this.aiService.chatGrade({
-      message: body.message,
-      imageUrl: body.imageUrl,
-      history: body.history,
-    });
+    // 构建消息数组
+    const messages: Array<{ role: string; content: any }> = [];
+
+    // 添加历史消息
+    if (body.history && body.history.length > 0) {
+      for (const msg of body.history) {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    }
+
+    // 添加当前消息（支持图片）
+    if (body.imageUrl) {
+      messages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: body.message },
+          { type: 'image_url', image_url: { url: body.imageUrl } },
+        ],
+      });
+    } else {
+      messages.push({ role: 'user', content: body.message });
+    }
+
+    const result = await this.aiService.chatGrade(messages);
 
     // 如果 AI 识别出是批改场景且有结构化数据，保存错题记录
     let savedQuestion = null;
-    if (result.grading) {
+    const grading = result.grading;
+    if (grading && grading.isCorrect && grading.isCorrect !== 'unknown') {
       try {
         savedQuestion = await this.errorQuestionsService.createQuestion({
           student_name: '用户',
           subject: '语文',
           question_text: body.message,
           student_answer: '（对话式提交，详见上下文）',
-          correct_answer: result.grading.correctAnswer,
-          step_by_step: result.grading.stepByStep,
-          is_correct: result.grading.isCorrect,
-          error_type: result.grading.errorType,
-          error_detail: result.grading.errorDetail,
-          trap_analysis: result.grading.trapAnalysis,
-          knowledge_points: result.grading.knowledgePoints,
-          weakness_level: result.grading.weaknessLevel,
+          correct_answer: (grading as any).correctAnswer || '',
+          step_by_step: (grading as any).stepByStep || '',
+          is_correct: grading.isCorrect,
+          error_type: grading.errorType || '',
+          error_detail: grading.errorAnalysis || '',
+          trap_analysis: grading.trapAnalysis || '',
+          knowledge_points: (grading as any).knowledgePoints || [],
+          weakness_level: (grading as any).weaknessLevel || 'light',
         });
       } catch (err: any) {
         this.logger.warn(`保存错题记录失败（不影响对话）: ${err.message}`);

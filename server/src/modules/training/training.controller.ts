@@ -45,15 +45,14 @@ export class TrainingController {
       errorType: q.error_type,
     }));
 
-    const trainingResult = await this.aiService.generateTraining({
-      questions: trainingQuestions,
-      weaknessLevel: overallWeakness,
-    });
+    // 先诊断再生成训练
+    const diagnosisResult = await this.aiService.diagnose({ questions });
+    const trainingResult = await this.aiService.generateTraining(diagnosisResult);
 
     const saved = await this.trainingService.saveTraining({
       diagnosisId: latestDiagnosisId,
       trainingData: trainingResult.trainingData,
-      carefulTraining: trainingResult.carefulTraining,
+      carefulTraining: trainingResult.carefulTraining ?? [],
       difficultyDistribution: trainingResult.difficultyDistribution,
       questionIds: questions.map(q => q.id as string),
     });
