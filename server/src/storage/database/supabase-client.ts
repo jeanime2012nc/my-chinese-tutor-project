@@ -9,7 +9,21 @@ interface SupabaseCredentials {
 }
 
 function loadEnv(): void {
-  if (envLoaded || (process.env.COZE_SUPABASE_URL && process.env.COZE_SUPABASE_ANON_KEY)) {
+  if (envLoaded) return;
+
+  // 支持 COZE_ 前缀和标准变量名，优先读取 COZE_ 前缀
+  if (!process.env.COZE_SUPABASE_URL && process.env.SUPABASE_URL) {
+    process.env.COZE_SUPABASE_URL = process.env.SUPABASE_URL;
+  }
+  if (!process.env.COZE_SUPABASE_ANON_KEY && process.env.SUPABASE_ANON_KEY) {
+    process.env.COZE_SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+  }
+  if (!process.env.COZE_SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    process.env.COZE_SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  }
+
+  if (process.env.COZE_SUPABASE_URL && process.env.COZE_SUPABASE_ANON_KEY) {
+    envLoaded = true;
     return;
   }
 
