@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm install && npx taro build --type h5 && cd server && npm install --ignore-scripts && npm run build"
+buildCommand = "cd server && npm install --ignore-scripts && npm run build"
 
 [deploy]
 startCommand = "cd server && node dist/main.js"

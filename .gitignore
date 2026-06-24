@@ -44,3 +44,7 @@ pnpm-debug.log*
 
 .cozeproj/reduction
 node-compile-cache/
+
+# 临时图片
+assets/*.png
+/assets/
