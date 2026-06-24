@@ -1,25 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-/** 调用 LLM 的统一方法 */
+/** 调用 LLM 的统一方法（使用 Coze SDK） */
 async function callLLM(
   messages: Array<{ role: string; content: any }>,
   options?: { temperature?: number; maxTokens?: number },
 ): Promise<string> {
-  const { OpenAI } = await import('openai');
+  const { LLMClient, Config } = await import('coze-coding-dev-sdk');
 
-  const openai = new OpenAI({
-    apiKey: process.env.LLM_API_KEY,
-    baseURL: process.env.LLM_BASE_URL || 'https://integration.coze.cn/api/v3',
-  });
+  const apiKey = process.env.LLM_API_KEY;
+  const baseUrl = process.env.LLM_BASE_URL;
 
-  const response = await openai.chat.completions.create({
-    model: 'doubao-seed-2-0-pro-260215',
-    messages: messages as any,
-    temperature: options?.temperature ?? 0.4,
-    max_tokens: options?.maxTokens ?? 4096,
-  });
+  const config = new Config({ apiKey, baseUrl });
+  const client = new LLMClient(config);
 
-  return response.choices[0]?.message?.content || '';
+  const response = await client.invoke(
+    messages.map((m) => ({
+      role: m.role as 'system' | 'user' | 'assistant',
+      content: m.content,
+    })),
+    {
+      model: 'doubao-seed-2.0-pro',
+      temperature: options?.temperature ?? 0.4,
+      streaming: false,
+    },
+  );
+
+  return response.content;
 }
 
 /** 从文本中提取 JSON 对象 */

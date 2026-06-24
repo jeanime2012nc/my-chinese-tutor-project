@@ -203,6 +203,9 @@ importers:
       '@supabase/supabase-js':
         specifier: 2.95.3
         version: 2.95.3
+      coze-coding-dev-sdk:
+        specifier: ^0.7.24
+        version: 0.7.24(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0)
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -1795,6 +1798,9 @@ packages:
   '@cacheable/utils@2.3.3':
     resolution: {integrity: sha512-JsXDL70gQ+1Vc2W/KUFfkAJzgb4puKwwKehNLuB+HrNKWf91O736kGfxn4KujXCCSuh6mRRL4XEB0PkAFjWS0A==}
 
+  '@cfworker/json-schema@4.1.1':
+    resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
+
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
@@ -3095,6 +3101,16 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
+  '@langchain/core@1.2.1':
+    resolution: {integrity: sha512-NNG/cC5FGuHDOAP56h0ddp8Rfk8p+othWzEK5RV9JIG6RvnF5vGa5r0AEGtKfQieed7s1kC42GuIzVOBvMBL/g==}
+    engines: {node: '>=20'}
+
+  '@langchain/openai@1.5.3':
+    resolution: {integrity: sha512-OStS2AUvy9oe/hEf/3ndBOFztUDOfuJYLNXh89m3iiJAI2Cp5Dp0n/pvpO27MO0b+VgENd+xSHVyQZ7fe+ulxg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': ^1.2.1
+
   '@leejim/wxml-parser@0.1.6':
     resolution: {integrity: sha512-1u4ULGK4GKkWhTlc3Hmac8PknrmpGd7qxZOTnT/Bm6EZ/wtonLgFhJ4vyuiUZpeCptnknOLkRpGx2Um9npwdZw==}
 
@@ -3618,6 +3634,9 @@ packages:
   '@smithy/uuid@1.1.0':
     resolution: {integrity: sha512-4aUIteuyxtBUhVdiQqcDhKFitwfd9hqoSDYY2KRXiWtgoWJ9Bmise+KfEPDiVHWeJepvF8xJO9/9+WDIciMFFw==}
     engines: {node: '>=18.0.0'}
+
+  '@standard-schema/spec@1.1.0':
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
   '@stencil/core@2.22.3':
     resolution: {integrity: sha512-kmVA0M/HojwsfkeHsifvHVIYe4l5tin7J5+DLgtl8h6WWfiMClND5K3ifCXXI2ETDNKiEk21p6jql3Fx9o2rng==}
@@ -5680,6 +5699,11 @@ packages:
       typescript:
         optional: true
 
+  coze-coding-dev-sdk@0.7.24:
+    resolution: {integrity: sha512-oL9Tg5PwxP6iMixonzzMO4aBjOKWcFUMVM+iz5dPyaqQkG84HP1y9DqK5DJVmtdfJuYdAW7pzOatDqLvgvZiXg==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+
   crc-32@1.2.2:
     resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
     engines: {node: '>=0.8'}
@@ -7462,6 +7486,9 @@ packages:
   js-base64@3.7.8:
     resolution: {integrity: sha512-hNngCeKxIUQiEUN3GPJOkz4wF/YvdUdbNL9hsBcMQTkKzboD7T/q3OYOuuPZLUE6dBxSGpwhk5mwuDud7JVAow==}
 
+  js-tiktoken@1.0.21:
+    resolution: {integrity: sha512-biOj/6M5qdgx5TKjDnFT1ymSpM5tbd3ylwDtrQvFQSu0Z7bBYko2dF+W/aUkXUPuk6IVpRxk/3Q2sHOzGlS36g==}
+
   js-tokens@3.0.2:
     resolution: {integrity: sha512-RjTcuD4xjtthQkaWH7dFlH85L+QaVtSoOyGdZ3g6HFhS9dFNDfLyqgm2NFe2X6cQpeFmt0452FJjFG5UameExg==}
 
@@ -7583,6 +7610,26 @@ packages:
 
   known-css-properties@0.37.0:
     resolution: {integrity: sha512-JCDrsP4Z1Sb9JwG0aJ8Eo2r7k4Ou5MwmThS/6lcIe1ICyb7UBJKGRIUUdqc2ASdE/42lgz6zFUnzAIhtXnBVrQ==}
+
+  langsmith@0.7.11:
+    resolution: {integrity: sha512-kK7tjvLo3KbyrXonZDJJMvX6jE5Ek9uwqtS2WX8AEGc5IwLoMrJlGR8wWk1UD8H/x0goiJDMsRht4qZd7Ijvcg==}
+    peerDependencies:
+      '@opentelemetry/api': '*'
+      '@opentelemetry/exporter-trace-otlp-proto': '*'
+      '@opentelemetry/sdk-trace-base': '*'
+      openai: '*'
+      ws: '>=7'
+    peerDependenciesMeta:
+      '@opentelemetry/api':
+        optional: true
+      '@opentelemetry/exporter-trace-otlp-proto':
+        optional: true
+      '@opentelemetry/sdk-trace-base':
+        optional: true
+      openai:
+        optional: true
+      ws:
+        optional: true
 
   latest-version@5.1.0:
     resolution: {integrity: sha512-weT+r0kTkRQdCdYCNtkMwWXQTMEswKrFBkm4ckQOMVhhqhIMI1UT2hMj+1iigIhgSZm5gTmrRXBNoGUgaTY1xA==}
@@ -8164,6 +8211,10 @@ packages:
   multipipe@0.1.2:
     resolution: {integrity: sha512-7ZxrUybYv9NonoXgwoOqtStIu18D1c3eFZj27hqgf5kBrBF8Q+tE8V0MW8dKM5QLkQPh1JhhbKgHLY9kifov4Q==}
 
+  mustache@4.2.0:
+    resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
+    hasBin: true
+
   mute-stream@0.0.8:
     resolution: {integrity: sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==}
 
@@ -8444,9 +8495,17 @@ packages:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
 
+  p-queue@6.6.2:
+    resolution: {integrity: sha512-RwFpb72c/BhQLEXIZ5K2e+AhgNVmIejGlTgiB9MzZ0e93GRvqZ7uSi0dvRF7/XIXDeNkra2fNHBxTyPDGySpjQ==}
+    engines: {node: '>=8'}
+
   p-timeout@2.0.1:
     resolution: {integrity: sha512-88em58dDVB/KzPEx1X0N3LwFfYZPyDc4B6eF38M1rk9VTZMbxXXgjugz8mmwpS9Ox4BDZ+t6t3QP5+/gazweIA==}
     engines: {node: '>=4'}
+
+  p-timeout@3.2.0:
+    resolution: {integrity: sha512-rhIwUycgwwKcP9yTOOFK/AKsAopjjCakVqLHePO3CC6Mir1Z99xT+R63jZxAT5lFZLa2inS5h+ZS2GvR99/FBg==}
+    engines: {node: '>=8'}
 
   p-try@2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
@@ -12983,6 +13042,8 @@ snapshots:
       hashery: 1.4.0
       keyv: 5.5.5
 
+  '@cfworker/json-schema@4.1.1': {}
+
   '@colors/colors@1.5.0':
     optional: true
 
@@ -14202,6 +14263,31 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
+  '@langchain/core@1.2.1(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0)':
+    dependencies:
+      '@cfworker/json-schema': 4.1.1
+      '@standard-schema/spec': 1.1.0
+      js-tiktoken: 1.0.21
+      langsmith: 0.7.11(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0)
+      mustache: 4.2.0
+      p-queue: 6.6.2
+      zod: 4.3.5
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - '@opentelemetry/exporter-trace-otlp-proto'
+      - '@opentelemetry/sdk-trace-base'
+      - openai
+      - ws
+
+  '@langchain/openai@1.5.3(@langchain/core@1.2.1(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0))(ws@8.19.0)':
+    dependencies:
+      '@langchain/core': 1.2.1(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0)
+      js-tiktoken: 1.0.21
+      openai: 6.44.0(ws@8.19.0)(zod@4.3.5)
+      zod: 4.3.5
+    transitivePeerDependencies:
+      - ws
+
   '@leejim/wxml-parser@0.1.6': {}
 
   '@ljharb/through@2.3.14':
@@ -14821,6 +14907,8 @@ snapshots:
   '@smithy/uuid@1.1.0':
     dependencies:
       tslib: 2.8.1
+
+  '@standard-schema/spec@1.1.0': {}
 
   '@stencil/core@2.22.3': {}
 
@@ -15551,7 +15639,7 @@ snapshots:
 
   '@types/better-sqlite3@7.6.13':
     dependencies:
-      '@types/node': 22.19.6
+      '@types/node': 24.12.4
     optional: true
 
   '@types/body-parser@1.19.6':
@@ -17503,6 +17591,24 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
+  coze-coding-dev-sdk@0.7.24(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0):
+    dependencies:
+      '@langchain/core': 1.2.1(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0)
+      '@langchain/openai': 1.5.3(@langchain/core@1.2.1(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0))(ws@8.19.0)
+      '@supabase/supabase-js': 2.95.3
+      axios: 1.13.2
+      pg: 8.17.2
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - '@opentelemetry/exporter-trace-otlp-proto'
+      - '@opentelemetry/sdk-trace-base'
+      - bufferutil
+      - debug
+      - openai
+      - pg-native
+      - utf-8-validate
+      - ws
+
   crc-32@1.2.2: {}
 
   crc32-stream@4.0.3:
@@ -18835,7 +18941,7 @@ snapshots:
       call-bound: 1.0.4
       define-properties: 1.2.1
       functions-have-names: 1.2.3
-      hasown: 2.0.2
+      hasown: 2.0.4
       is-callable: 1.2.7
 
   functions-have-names@1.2.3: {}
@@ -19507,7 +19613,7 @@ snapshots:
       call-bound: 1.0.4
       gopd: 1.2.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   is-retry-allowed@1.2.0: {}
 
@@ -19646,6 +19752,10 @@ snapshots:
 
   js-base64@3.7.8: {}
 
+  js-tiktoken@1.0.21:
+    dependencies:
+      base64-js: 1.5.1
+
   js-tokens@3.0.2: {}
 
   js-tokens@4.0.0: {}
@@ -19752,6 +19862,13 @@ snapshots:
   kind-of@6.0.3: {}
 
   known-css-properties@0.37.0: {}
+
+  langsmith@0.7.11(openai@6.44.0(ws@8.19.0)(zod@4.3.5))(ws@8.19.0):
+    dependencies:
+      p-queue: 6.6.2
+    optionalDependencies:
+      openai: 6.44.0(ws@8.19.0)(zod@4.3.5)
+      ws: 8.19.0
 
   latest-version@5.1.0:
     dependencies:
@@ -20451,6 +20568,8 @@ snapshots:
     dependencies:
       duplexer2: 0.0.2
 
+  mustache@4.2.0: {}
+
   mute-stream@0.0.8: {}
 
   mute-stream@1.0.0: {}
@@ -20737,7 +20856,16 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
+  p-queue@6.6.2:
+    dependencies:
+      eventemitter3: 4.0.7
+      p-timeout: 3.2.0
+
   p-timeout@2.0.1:
+    dependencies:
+      p-finally: 1.0.0
+
+  p-timeout@3.2.0:
     dependencies:
       p-finally: 1.0.0
 
