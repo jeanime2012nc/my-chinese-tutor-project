@@ -147,7 +147,6 @@ export default function Index() {
       Taro.hideLoading()
       console.log('上传成功，图片URL:', uploadedUrl)
       setPendingImage(uploadedUrl)
-      setPendingImage(url)
       scrollToBottom()
     } catch (error) {
       console.error('上传图片失败:', error)
