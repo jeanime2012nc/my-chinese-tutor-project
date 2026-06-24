@@ -33,7 +33,7 @@ export class DiagnosisController {
       }));
 
     if (wrongQuestions.length === 0) {
-      return { code: 200, msg: 'success', data: { message: '还没有批改记录哦，先去对话页面提交一道题目吧！' } };
+      return { code: 200, msg: '还没有批改记录哦，先去对话页面提交一道题目吧！', data: null };
     }
 
     const diagnosisResult = await this.aiService.diagnose({ questions: wrongQuestions });

@@ -124,6 +124,7 @@ export class AiService {
   }> {
     const questionsText = JSON.stringify(params.questions, null, 2);
     const prompt = `你是一位高中语文教学诊断专家。以下是学生的错题记录，请进行薄弱诊断。
+注意：这是高中语文学科，绝对不能涉及数学、物理、化学、生物、地理等其他任何学科内容。
 
 错题记录：
 ${questionsText}
@@ -133,19 +134,20 @@ ${questionsText}
 \`\`\`json
 {
   "errorTypeStats": {"审题错误": 数字, "概念错误": 数字, "思路错误": 数字},
-  "topWeaknesses": [{"name": "具体薄弱知识点", "level": "mild|moderate|severe", "count": 出现次数}],
+  "topWeaknesses": [{"name": "具体薄弱知识点（必须是高中语文知识点）", "level": "mild|moderate|severe", "count": 出现次数}],
   "summary": "综合诊断结论（200字以内，包含整体评价、主要问题、提升建议）"
 }
 \`\`\`
 
 要求：
 1. errorTypeStats 用对象格式，key为错误类型名称，value为出现次数
-2. topWeaknesses 列出前 3-5 个需优先巩固的知识短板
-3. 总结要具体、有针对性，适合高中语文学习`;
+2. topWeaknesses 必须列出语文知识的具体薄弱点，如文言文实词、古诗鉴赏、作文立意、现代文阅读等
+3. 总结中全部围绕高中语文能力提升展开
+4. 【严禁】出现任何数学、物理、化学等非语文学科内容`;
 
     try {
       const responseText = await callLLM([
-        { role: 'system', content: '你是一位专业的高中语文教学诊断专家。' },
+        { role: 'system', content: '你是一位专业的高中语文教学诊断专家。本系统只负责高中语文学科诊断，绝不能分析任何其他学科的知识点。' },
         { role: 'user', content: prompt },
       ], { temperature: 0.3, maxTokens: 4096 });
 

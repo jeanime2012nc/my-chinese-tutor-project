@@ -22,7 +22,7 @@ export class TrainingController {
 
     const questions = await this.errorQuestionsService.getAllQuestions();
     if (questions.length === 0) {
-      return { code: 200, msg: 'success', data: { message: '暂无批改记录，请先提交题目' } };
+      return { code: 200, msg: '暂无批改记录，请先提交题目', data: null };
     }
 
     // 获取最新诊断记录ID
